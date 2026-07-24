@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour QR 스캐너</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html5-qrcode library CDN -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Viewfinder animations */
+    @keyframes qr-breath {
+      0% { transform: scale(0.98); opacity: 0.7; }
+      50% { transform: scale(1.02); opacity: 1; }
+      100% { transform: scale(0.98); opacity: 0.7; }
+    }
+    .qr-viewfinder {
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+    }
+    .qr-border-corner {
+      animation: qr-breath 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-10">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 shadow-sm flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🎯</span>
+      <div>
+        <h1 id="header-project-name" class="font-bold text-slate-800 text-sm md:text-base truncate max-w-[220px]">프로젝트 로드 중...</h1>
+        <p id="header-project-serial" class="text-xs text-slate-500 font-mono"></p>
+      </div>
+    </div>
+    <button onclick="window.close()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300">
+      창 닫기
+    </button>
+  </header>
+
+  <!-- Main Container -->
+  <main class="px-4 py-5 max-w-md mx-auto">
+    <div class="mb-5 bg-blue-50 border border-blue-100 rounded-xl p-4 text-blue-800 text-xs leading-relaxed shadow-sm">
+      <p class="font-bold text-sm mb-1">💡 QR 스캔 사용법</p>
+      <p>1. 아래에 등록된 Tour 목록 중 <b>스캔을 진행할 Tour</b>의 카드를 터치하세요.</p>
+      <p class="mt-1">2. 카메라가 활성화되면 방문자(현장등록자)의 QR 코드를 스캔합니다.</p>
+      <p class="mt-1">3. 스캔 시 해당 Tour에 방문이 자동 등록되며 도달률 및 보상이 갱신됩니다.</p>
+    </div>
+
+    <!-- Tour List Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+        <span>📍 Tour 대표 이미지 목록</span>
+        <span id="tour-count-badge" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+      </h2>
+    </div>
+
+    <!-- Tour Card Grid -->
+    <div id="tour-list" class="grid grid-cols-1 gap-4">
+      <!-- Skeleton Loading -->
+      <div class="animate-pulse bg-white border border-slate-200 rounded-xl p-3 flex gap-3 h-28">
+        <div class="bg-slate-200 rounded-lg w-24 h-full"></div>
+        <div class="flex-1 space-y-2 py-1">
+          <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+          <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+          <div class="h-3 bg-slate-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Fullscreen Camera Overlay -->
+  <div id="camera-overlay" class="fixed inset-0 z-50 bg-black/90 hidden flex flex-col justify-between">
+    <!-- Camera Header -->
+    <div class="p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between z-10">
+      <div>
+        <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Active Stamp Scanner</span>
+        <h3 id="scanning-tour-name" class="text-white font-bold text-sm mt-1">Tour 이름</h3>
+      </div>
+      <button onclick="stopScanning()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-lg">
+        ✕
+      </button>
+    </div>
+
+    <!-- Camera Window Area -->
+    <div class="relative flex-1 flex items-center justify-center overflow-hidden">
+      <!-- Camera Reader container (HTML5-QRCODE will inject video here) -->
+      <div id="qr-reader" class="w-full h-full object-cover"></div>
+
+      <!-- Custom Viewfinder Overlay -->
+      <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <!-- Viewfinder Center -->
+        <div class="w-64 h-64 border-2 border-dashed border-white/40 rounded-3xl relative flex items-center justify-center">
+          <!-- Green animated laser line -->
+          <div class="absolute left-4 right-4 h-1 bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-[bounce_2.5s_infinite_ease-in-out]"></div>
+          
+          <!-- Corner reticles -->
+          <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-xl qr-border-corner"></div>
+          <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-xl qr-border-corner"></div>
+          <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-xl qr-border-corner"></div>
+          <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-xl qr-border-corner"></div>
+        </div>
+
+        <p class="absolute bottom-12 text-center text-white/80 font-medium text-xs px-6 py-2 bg-black/60 rounded-full border border-white/10 backdrop-blur-sm">
+          방문자의 QR코드를 화면 사각형 안에 비춰주세요
+        </p>
+      </div>
+    </div>
+
+    <!-- Camera Footer -->
+    <div class="p-5 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center gap-2 z-10">
+      <p class="text-white/60 text-[11px] text-center">장치를 가로로 돌리지 마십시오. 수직을 유지하십시오.</p>
+    </div>
+  </div>
+
+  <!-- Dialog Backdrop -->
+  <div id="dialog-overlay" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
+    <!-- Success Modal -->
+    <div id="success-modal" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-all duration-300">
+      <div class="p-6 text-center">
+        <div id="modal-icon-container" class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span id="modal-icon" class="text-3xl text-green-600">✓</span>
+        </div>
+        <h4 id="modal-title" class="text-lg font-bold text-slate-800 mb-1">스탬프 적립 완료</h4>
+        <p id="modal-visitor-info" class="text-xs text-slate-500 mb-4 font-mono"></p>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-5">
+          <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">방문 정보</p>
+          <p id="modal-loc-name" class="font-bold text-slate-800 text-sm mt-0.5">Tour 이름</p>
+          
+          <div class="mt-3 flex items-center justify-center gap-3">
+            <div class="bg-blue-50 border border-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full text-xs">
+              방문 정도: <span id="modal-progress" class="font-mono text-sm font-extrabold">3/5</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Celebrate Reward Box -->
+        <div id="modal-reward-box" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-left text-amber-900 mb-5 shadow-inner">
+          <p class="font-bold text-xs text-amber-800 flex items-center gap-1.5 mb-1.5">
+            <span>🎁</span> <span id="modal-reward-label">모든 Tour 스탬프 보상</span> <span>🎉</span>
+          </p>
+          <div id="modal-reward-message" class="text-xs font-semibold whitespace-pre-wrap leading-relaxed text-amber-950">
+            보상 메세지가 여기에 들어갑니다.
+          </div>
+        </div>
+
+        <button onclick="closeSuccessDialog()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all text-sm">
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('id');
+    const projectSerial = urlParams.get('serial') || '';
+    const projectName = urlParams.get('name') || '';
+    const agentToken = urlParams.get('agent_token') || '';
+
+    // Set Header
+    document.getElementById('header-project-name').textContent = projectName || '프로젝트 정보 없음';
+    document.getElementById('header-project-serial').textContent = projectSerial ? `일련번호: ${projectSerial}` : '';
+
+    let activeLocationId = null;
+    let html5QrScanner = null;
+    let scanThrottle = false;
+
+    // Load project locations
+    async function fetchLocations() {
+      if (!projectId) {
+        document.getElementById('tour-list').innerHTML = `
+          <div class="text-center text-red-500 p-5 bg-white border border-red-100 rounded-xl text-sm font-semibold">
+            프로젝트 ID가 제공되지 않았습니다.
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const url = `/api/host/projects/${projectId}/locations` + (agentToken ? `?agent_token=${encodeURIComponent(agentToken)}` : '');
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || 'Tour 데이터를 로드하지 못했습니다.');
+        }
+
+        const activeLocations = (result.data || []).filter(l => !l.disabled);
+        document.getElementById('tour-count-badge').textContent = activeLocations.length;
+
+        if (activeLocations.length === 0) {
+          document.getElementById('tour-list').innerHTML = `
+            <div class="text-center text-slate-400 py-10 bg-white border border-slate-200 border-dashed rounded-xl text-sm">
+              활성화된 Tour가 없습니다.
+            </div>
+          `;
+          return;
+        }
+
+        const listContainer = document.getElementById('tour-list');
+        listContainer.innerHTML = activeLocations.map(loc => {
+          const imgUrl = loc.image_url || 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=300&auto=format&fit=crop';
+          return `
+            <div onclick="startScanning(${loc.id}, '${loc.location_name.replace(/'/g, "\\'")}')" 
+                 class="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md rounded-xl p-3 flex gap-4 cursor-pointer transition-all duration-200 active:scale-[0.98]">
+              <div class="w-24 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
+                <img src="${imgUrl}" alt="${loc.location_name}" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1 flex flex-col justify-center overflow-hidden">
+                <h3 class="font-bold text-slate-800 text-sm md:text-base truncate">${loc.location_name}</h3>
+                <p class="text-slate-500 text-xs mt-1 line-clamp-2">${loc.location_desc || '설명 없음'}</p>
+              </div>
+              <div class="flex items-center justify-center px-1">
+                <span class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold border border-blue-100">
+                  ⚡
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        document.getElementById('tour-list').innerHTML = `
+          <div class="text-center text-red-500 p-5 bg-white border border-red-100 rounded-xl text-sm">
+            ${err.message || '네트워크 오류가 발생했습니다.'}
+          </div>
+        `;
+      }
+    }
+
+    // Open Camera Overlay and start scan
+    function startScanning(locationId, locationName) {
+      activeLocationId = locationId;
+      document.getElementById('scanning-tour-name').textContent = locationName;
+      document.getElementById('camera-overlay').classList.remove('hidden');
+
+      // Initialize scanner
+      html5QrScanner = new Html5Qrcode("qr-reader");
+      
+      const config = { 
+        fps: 10, 
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      html5QrScanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        onScanSuccess, 
+        onScanError
+      ).catch(err => {
+        alert("카메라 시작 실패: " + err);
+        stopScanning();
+      });
+    }
+
+    // Stop scan and close Overlay
+    function stopScanning() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner = null;
+        }).catch(err => {
+          console.error("Camera stop error: ", err);
+          html5QrScanner = null;
+        });
+      }
+      document.getElementById('camera-overlay').classList.add('hidden');
+      activeLocationId = null;
+    }
+
+    // Success handling
+    async function onScanSuccess(decodedText, decodedResult) {
+      if (scanThrottle) return;
+      scanThrottle = true;
+      setTimeout(() => { scanThrottle = false; }, 2000); // 2 seconds cooldown
+
+      // Extract token from scanned URL
+      let token = decodedText.trim();
+      try {
+        const match = token.match(/\/r\/[^/]+\/([^/?#]+)/);
+        if (match && match[1]) {
+          token = match[1];
+        }
+      } catch (err) {
+        console.error("Failed to parse token from scanned text:", err);
+      }
+
+      const locId = activeLocationId;
+      // Stop camera before showing results
+      stopScanning();
+
+      // Send to server
+      try {
+        const response = await fetch(`/api/host/projects/${projectId}/scan-visitor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: token,
+            locationId: locId,
+            agent_token: agentToken
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          showErrorDialog(data.message || 'QR 코드 인식 및 방문객 등록에 실패했습니다.');
+          return;
+        }
+
+        // Show success modal
+        showSuccessDialog(data);
+
+      } catch (err) {
+        showErrorDialog('네트워크 연결 또는 서버 오류가 발생했습니다.');
+      }
+    }
+
+    function onScanError(errorMessage) {
+      // Quietly log to prevent continuous alerts in console
+    }
+
+    // Display dialog modal
+    function showSuccessDialog(data) {
+      const modal = document.getElementById('success-modal');
+      const container = document.getElementById('modal-icon-container');
+      const icon = document.getElementById('modal-icon');
+      const title = document.getElementById('modal-title');
+      const visitor = document.getElementById('modal-visitor-info');
+      const loc = document.getElementById('modal-loc-name');
+      const progress = document.getElementById('modal-progress');
+      const rewardBox = document.getElementById('modal-reward-box');
+
+      // Reset
+      container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100";
+      icon.textContent = "✓";
+      icon.className = "text-3xl text-green-600";
+      title.className = "text-lg font-bold text-slate-800 mb-1";
+
+      if (data.already_visited) {
+        title.textContent = "이미 방문한 Tour입니다";
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-amber-100";
+        icon.textContent = "ℹ";
+        icon.className = "text-3xl text-amber-600";
+      } else {
+        title.textContent = "스탬프 적립 성공!";
+      }
+
+      visitor.textContent = `${data.visitor_name} (${formatPhone(data.phone)})`;
+      loc.textContent = data.location_name;
+      progress.textContent = `${data.visited_count}/${data.total_count}`;
+
+      // Check if mission completed (5/5 visited)
+      if (data.completed) {
+        rewardBox.classList.remove('hidden');
+        document.getElementById('modal-reward-label').textContent = data.reward_label || '현장등록 완주 보상 혜택';
+        document.getElementById('modal-reward-message').textContent = data.reward_message || '축하합니다! 완주 보상이 제공되었습니다.';
+        
+        // Emphasize celebratory feel
+        title.textContent = "🎉 투어 완주 성공! 🎉";
+        title.className = "text-xl font-black text-amber-600 mb-1";
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-amber-100 animate-bounce";
+        icon.textContent = "🎁";
+        icon.className = "text-3xl text-amber-600";
+      } else {
+        rewardBox.classList.add('hidden');
+      }
+
+      document.getElementById('dialog-overlay').classList.remove('hidden');
+    }
+
+    function showErrorDialog(message) {
+      const modal = document.getElementById('success-modal');
+      const container = document.getElementById('modal-icon-container');
+      const icon = document.getElementById('modal-icon');
+      const title = document.getElementById('modal-title');
+      const visitor = document.getElementById('modal-visitor-info');
+      const loc = document.getElementById('modal-loc-name');
+      const progress = document.getElementById('modal-progress');
+      const rewardBox = document.getElementById('modal-reward-box');
+
+      container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100";
+      icon.textContent = "✕";
+      icon.className = "text-3xl text-red-600";
+      title.textContent = "오류 발생";
+      title.className = "text-lg font-bold text-red-600 mb-1";
+      visitor.textContent = "";
+      loc.textContent = message;
+      progress.parentNode.style.display = "none";
+      rewardBox.classList.add('hidden');
+
+      document.getElementById('dialog-overlay').classList.remove('hidden');
+    }
+
+    function closeSuccessDialog() {
+      document.getElementById('dialog-overlay').classList.add('hidden');
+      document.getElementById('modal-progress').parentNode.style.display = "flex"; // Restore style
+    }
+
+    function formatPhone(p) {
+      if (!p) return '';
+      const s = String(p);
+      if (s.length === 11) {
+        return `${s.slice(0,3)}-${s.slice(3,7)}-${s.slice(7)}`;
+      }
+      if (s.length === 10) {
+        return `${s.slice(0,3)}-${s.slice(3,6)}-${s.slice(6)}`;
+      }
+      return s;
+    }
+
+    // Init page load
+    fetchLocations();
+  </script>
+</body>
+</html>

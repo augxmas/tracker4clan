@@ -1,0 +1,2274 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>스탬프투어</title>
+  <meta name="theme-color" content="#15803d">
+  <link rel="icon" href="/favicon-green.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="스탬프투어">
+  <link rel="manifest" id="manifest-link" href="/visitor/manifest.json">
+  <link rel="apple-touch-icon" href="/favicon-green.svg">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: "Malgun Gothic", -apple-system, sans-serif; margin: 0;
+           background: radial-gradient(circle at top, #d8e9ff, #f6fbff); color: #16243a;
+           min-height: 100vh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+    .wrap { max-width: 440px; margin: 0 auto; padding: 18px 16px 28px; }
+    .card { background: #fff; border-radius: 16px; padding: 22px 20px; box-shadow: 0 10px 30px rgba(18,38,72,.12); }
+    h1 { font-size: 19px; margin: 0 0 4px; }
+    h2 { font-size: 16px; margin: 0 0 10px; }
+    .sub { font-size: 13px; color: #5b6b85; margin: 0 0 18px; }
+    .hero { margin: -22px -20px 16px; border-radius: 16px 16px 0 0; overflow: hidden; background: #eef3fb; }
+    .hero img { width: 100%; display: block; max-height: 320px; object-fit: cover; }
+    .hero.hidden { display: none; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .brand img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+    .brand .brand-name { font-weight: 800; font-size: 16px; color: #16243a; }
+    .brand .pj { font-size: 12px; color: #5b6b85; }
+    label.lab { display: block; font-size: 13px; font-weight: 600; color: #33415c; margin-bottom: 6px; }
+    input[type=tel] { width: 100%; padding: 13px 14px; font-size: 16px; border: 1.5px solid #c9d6ea;
+                      border-radius: 10px; outline: none; }
+    input[type=tel]:focus { border-color: #15803d; }
+    .btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 700; border: none; border-radius: 12px;
+           cursor: pointer; margin-top: 12px; }
+    .btn-primary { background: #15803d; color: #fff; }
+    .btn-primary:disabled { background: #a7f3d0; cursor: not-allowed; }
+    .btn-ghost { background: #eef3fb; color: #15803d; }
+    .doc { max-height: 150px; overflow: auto; border: 1px solid #e6ecf5; border-radius: 10px;
+           padding: 12px; font-size: 12px; line-height: 1.6; color: #4a5870; background: #fbfcfe; }
+    .doc h4 { margin: 10px 0 4px; font-size: 12.5px; color: #16243a; }
+    .doc p { margin: 0 0 6px; }
+    .agree-row { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0 4px; font-size: 13px; }
+    .agree-row input { width: 19px; height: 19px; margin-top: 1px; flex-shrink: 0; accent-color: #15803d; }
+    .agree-all { background: #eef3fb; border-radius: 10px; padding: 11px 12px; font-weight: 700; }
+    .msg { font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .msg.err { color: #d62828; }
+    .msg.ok { color: #138a36; }
+    .stamp { text-align: center; font-size: 56px; margin: 6px 0 2px; }
+    .prog-num { text-align: center; margin: 10px 0 4px; }
+    .prog-num b { font-size: 40px; color: #15803d; }
+    .prog-num span { font-size: 16px; color: #5b6b85; }
+    .bar-wrap { height: 12px; background: #e6ecf5; border-radius: 8px; overflow: hidden; margin: 14px 0 8px; }
+    .bar { height: 100%; width: 0; background: linear-gradient(90deg,#2a7de1,#15803d); transition: width .5s; }
+    .stat { display: flex; justify-content: space-around; text-align: center; margin: 14px 0 4px; }
+    .stat .n { font-size: 22px; font-weight: 800; }
+    .stat .l { font-size: 12px; color: #5b6b85; }
+    .done-banner { background: #e7f8ee; color: #138a36; border-radius: 10px; padding: 12px; text-align: center;
+                   font-weight: 700; margin-top: 10px; }
+    .install-bar { margin-top: 14px; display: none; }
+    .center { text-align: center; }
+    .spin { display: inline-block; width: 26px; height: 26px; border: 3px solid #d3deef; border-top-color: #15803d;
+            border-radius: 50%; animation: r 1s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+    @keyframes pulse-border {
+      0% { border-color: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+      70% { border-color: #d97706; box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+      100% { border-color: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+    }
+    @keyframes bounce-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .hidden { display: none; }
+
+    /* 커스텀 알림 */
+    .alert-ov { position: fixed; inset: 0; background: rgba(10,20,40,.5); z-index: 1100;
+                display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .alert-ov.hidden { display: none; }
+    .alert-box { background: #fff; border-radius: 16px; padding: 24px 22px; width: 100%; max-width: 320px;
+                 text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,.25); }
+    .alert-ico { font-size: 42px; }
+    .alert-msg { font-size: 15px; font-weight: 700; color: #16243a; margin: 10px 0 18px; line-height: 1.5; }
+
+    /* Tour 방문 체크리스트 */
+    .dest-list { margin-top: 18px; text-align: left; }
+    .dl-title { font-size: 14px; font-weight: 800; color: #16243a; margin-bottom: 6px; }
+    .dl-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid #eef2f7; }
+    .dl-row:last-child { border-bottom: none; }
+    .dl-seq { width: 24px; height: 24px; flex-shrink: 0; background: #cbd5e1; color: #fff; border-radius: 50%;
+              display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+    .dl-row.dl-done .dl-seq { background: #138a36; }
+    .dl-ico { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; flex-shrink: 0; border: 1px solid #e6ecf5; }
+    .dl-ico-ph { display: flex; align-items: center; justify-content: center; background: #f1f5f9; font-size: 16px; }
+    .dl-name { flex: 1; min-width: 0; font-size: 13px; color: #33415c; display: flex; align-items: center; gap: 6px; }
+    .dl-name-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dl-row.dl-done .dl-name { color: #16243a; font-weight: 600; }
+    .dl-info { background:none; border:none; color:#3b82f6; font-size:18px; cursor:pointer; padding:0 4px; line-height:1; flex-shrink:0; }
+    .dl-info:hover { color:#1d4ed8; }
+    /* 전시물 설명 오버레이 */
+    #dest-desc-ov { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:none; align-items:center; justify-content:center; padding:20px; }
+    #dest-desc-ov.show { display:flex; }
+    .dd-box { background:#fff; border-radius:14px; padding:20px 20px 16px; max-width:360px; width:100%; box-shadow:0 16px 48px rgba(0,0,0,.30); }
+    .dd-title { font-size:16px; font-weight:800; color:#16243a; margin-bottom:10px; border-bottom:1px solid #e5e7eb; padding-bottom:8px; }
+    .dd-body { font-size:13px; color:#33415c; line-height:1.6; white-space:pre-wrap; max-height:50vh; overflow-y:auto; margin-bottom:14px; }
+    .dd-close { width:100%; padding:10px; background:#16243a; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+    .dl-on  { font-size: 12px; font-weight: 800; color: #138a36; white-space: nowrap; }
+    .dl-off { font-size: 12px; font-weight: 700; color: #b0b8c4; white-space: nowrap; }
+
+    /* 단계별 보상 진행 list */
+    .tier-list { margin-top:18px; }
+    .tl-title { font-size:14px; font-weight:800; color:#16243a; margin-bottom:6px; }
+    .tl-row { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; margin-bottom:4px; background:#f1f5f9; }
+    .tl-row.reached { background:#dcfce7; }
+    .tl-row.issued { background:#e7f8ee; border:1px solid #16a34a; }
+    .tl-mark { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+    .tl-mark.off { background:#cbd5e1; color:#fff; }
+    .tl-mark.on { background:#16a34a; color:#fff; }
+    .tl-pct { font-weight:700; color:#16243a; font-size:13px; min-width:50px; }
+    .tl-name { flex:1; font-size:13px; color:#33415c; }
+    .tl-amount { font-weight:800; color:#16243a; font-size:13px; white-space:nowrap; }
+
+    /* 프로젝트 설명 (host가 등록한 내용) */
+    .prog-desc { background: #f0f9ff; border: 1px solid #bae6fd; color: #0c4a6e; border-radius: 10px;
+                 padding: 12px 14px; margin: 12px 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; display: none; }
+    .prog-desc.show { display: block; }
+
+    /* Quiz */
+    .quiz-list { margin-top: 22px; text-align: left; }
+    .ql-title { font-size: 14px; font-weight: 800; color: #16243a; margin-bottom: 8px; }
+    .quiz-card { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(20,30,60,.04); }
+    .quiz-card.locked { background: #f8fafc; border-color: #e5e7eb; }
+    .quiz-card.solved { background: #f0fdf4; border-color: #86efac; }
+    .qc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .qc-no { background:#3b82f6;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0; }
+    .qc-card.locked .qc-no { background:#cbd5e1; }
+    .qc-loc { font-size: 11px; background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:999px; font-weight:600; }
+    .qc-toggle { margin-left: auto; color:#94a3b8; font-size: 12px; }
+    .qc-status { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+    .qc-q-preview { font-size: 13px; color: #64748b; padding: 6px 4px 0; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qc-type { font-size: 11px; color:#64748b; font-weight:600; }
+    .qc-status.locked { background:#f1f5f9; color:#94a3b8; }
+    .qc-status.unsolved { background:#fef3c7; color:#92400e; }
+    .qc-status.correct { background:#dcfce7; color:#166534; }
+    .qc-status.wrong { background:#fee2e2; color:#991b1b; }
+    .qc-q { font-size: 14px; font-weight: 600; color: #16243a; margin-bottom: 8px; line-height: 1.5; }
+    .qc-img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; margin-bottom: 10px; background:#f1f5f9; }
+    .qc-locked-msg { background:#f1f5f9; color:#64748b; padding:10px 12px; border-radius:8px; font-size:12px; text-align:center; }
+    .qc-choices { display: flex; flex-direction: column; gap: 6px; }
+    .qc-choice { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; background:#fff; user-select:none; }
+    .qc-choice:hover { border-color: #3b82f6; }
+    .qc-choice.sel { border-color: #3b82f6; background: #eff6ff; }
+    .qc-choice.disabled { cursor: default; opacity: 0.7; }
+    .qc-choice.disabled:hover { border-color: #e5e7eb; }
+    .qc-choice.correct-ans { border-color: #16a34a; background: #dcfce7; }
+    .qc-choice.wrong-ans { border-color: #dc2626; background: #fee2e2; }
+    .qc-choice-mark { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #cbd5e1; flex-shrink: 0; display:flex;align-items:center;justify-content:center; font-size:13px; color:#fff; }
+    .qc-choice.sel .qc-choice-mark { background:#3b82f6; border-color:#3b82f6; }
+    .qc-choice-img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb; flex-shrink: 0; }
+    .qc-choice-text { flex: 1; font-size: 13px; color: #16243a; }
+    .qc-submit { width: 100%; margin-top: 10px; padding: 10px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .qc-submit:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .qc-retry { width: 100%; margin-top: 8px; padding: 8px; background: #fff; color: #dc2626; border: 1.5px solid #fca5a5; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    /* 정답/오답 결과 오버레이 */
+    #quiz-result-ov { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    #quiz-result-ov.show { display: flex; }
+    .qr-box { background: #fff; border-radius: 16px; padding: 24px 20px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,.30); }
+    .qr-img { width: 160px; height: 160px; margin: 0 auto 14px; display: block; }
+    .qr-msg { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+    .qr-sub { font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.5; }
+    .qr-close { width: 100%; padding: 10px; background: #16243a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+    /* Gift 카드 */
+    .gift-box { margin-top: 14px; background: #fff7e6; border: 1.5px solid #ffd591; border-radius: 14px; padding: 16px; text-align: center; }
+    .gift-box.gift-used { background: #f1f5f9; border-color: #cbd5e1; }
+    .gift-ttl { font-size: 15px; font-weight: 800; color: #ad6800; }
+    .gift-box.gift-used .gift-ttl { color: #64748b; }
+    .gift-qr { width: 220px; max-width: 80%; height: auto; margin: 12px auto 6px; display: block; border-radius: 10px; background: #fff; }
+    .gift-sub { font-size: 12px; color: #8c6d1f; }
+    .gift-box.gift-used .gift-sub { color: #94a3b8; }
+
+    /* QR 스캐너 */
+    #scanner { position: fixed; inset: 0; background: #000; z-index: 1000;
+               display: flex; align-items: center; justify-content: center; }
+    /* ID 선택자가 .hidden(class)보다 우선순위가 높아 안 숨겨지므로 더 구체적인 규칙으로 강제 */
+    #scanner.hidden { display: none; }
+    #scan-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .scan-frame { position: relative; z-index: 1; width: 66vw; max-width: 280px; aspect-ratio: 1 / 1;
+                  border: 3px solid #fff; border-radius: 18px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.5); }
+    .scan-hint { position: absolute; z-index: 2; bottom: 16%; color: #fff; font-size: 14px;
+                 text-shadow: 0 1px 4px #000; text-align: center; padding: 0 20px; }
+    #scan-close { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top) + 14px); right: 14px;
+                  background: rgba(255,255,255,.92); color: #16243a; border: none; border-radius: 24px;
+                  padding: 10px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    #scan-msg { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top) + 18px); left: 14px;
+                color: #fff; font-size: 13px; max-width: 60%; text-shadow: 0 1px 4px #000; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" style="position:relative;">
+      <!-- 우상단: 비로그인 시 × 버튼, 로그인 시 "이름 ⚙" 표시 -->
+      <div id="topright-zone" style="position:absolute;top:10px;right:10px;z-index:50;display:flex;align-items:center;gap:6px;">
+        <button id="app-close" onclick="closeApp()" aria-label="닫기"
+          style="background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:50%;width:36px;height:36px;font-size:18px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1);">×</button>
+        <div id="visitor-info" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,.95);border:1px solid #cbd5e1;border-radius:18px;padding:4px 6px 4px 12px;box-shadow:0 2px 6px rgba(0,0,0,.1);">
+          <span id="visitor-name" style="font-size:13px;font-weight:700;color:#15803d;"></span>
+          <button id="visitor-qr-btn" onclick="openMyQR()" title="내 QR 코드"
+            style="background:#15803d;border:1px solid #166534;color:#fff;border-radius:50%;width:28px;height:28px;font-size:11px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.15);">QR</button>
+          <button id="visitor-settings" onclick="openVisitorSettings()" title="설정"
+            style="background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;">⚙</button>
+        </div>
+      </div>
+      <div id="hero" class="hero hidden"><img id="hero-img" alt=""></div>
+      <!-- 전역 PWA 설치 안내 — 모든 화면(랜딩·인증·진행·Tour 등) 에서 미설치 시 노출 -->
+      <div id="install-bar" style="display:none;margin:0 0 12px;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;text-align:center;">
+        <div id="install-title" style="font-size:13px;font-weight:700;color:#166534;margin-bottom:5px;">📲 앱 설치</div>
+        <div style="font-size:12px;color:#475569;line-height:1.5;margin-bottom:8px;">
+          홈 화면에 앱으로 설치하면 빠르게 진행 상황을 확인하고 모든 혜택을 받을 수 있습니다.
+        </div>
+        <button class="btn btn-primary" id="btn-install" style="width:100%;padding:10px;">📲 홈 화면에 앱 설치</button>
+        <div id="install-ios-tip" style="display:none;margin-top:8px;font-size:11px;color:#64748b;line-height:1.5;">
+          📱 iOS: Safari 하단 <b>공유 아이콘</b> → <b>"홈 화면에 추가"</b>
+        </div>
+      </div>
+      <div class="brand">
+        <img id="brand-icon" src="/favicon.svg" alt="">
+        <div>
+          <div class="brand-name" id="brand-title">스탬프투어</div>
+          <div class="pj" id="pj-name">스탬프투어</div>
+        </div>
+      </div>
+
+      <!-- 로딩 -->
+      <div id="screen-loading" class="center"><div class="spin"></div></div>
+
+      <!-- 통합 메뉴 — 프로젝트 기능 선택 화면 -->
+      <section id="screen-menu" class="hidden">
+        <h2 id="menu-title" style="display:none;"></h2>
+        <div id="preview-banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;text-align:center;font-size:12px;color:#92400e;line-height:1.55;">
+          🔍 <b>미리보기 모드</b> — 활성화된 모든 기능을 노출합니다. 실제 방문자에게는 행사 진행 상태에 따라 노출이 제한됩니다.
+        </div>
+        <p class="sub" style="text-align:center;margin-bottom:18px;">참여하실 기능을 선택해 주세요.</p>
+        <div id="menu-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+        <!-- 하단 전체폭 닫기 버튼 -->
+        <button type="button" onclick="closeFromMenu()"
+          style="display:block;width:100%;margin-top:24px;padding:14px;background:#fff;border:1.5px solid #cbd5e1;color:#475569;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
+          닫기
+        </button>
+        <div style="margin-top:18px;text-align:center;font-size:11px;color:#94a3b8;">
+          ※ 홈 화면에 앱을 추가하면 한 곳에서 모든 기능을 빠르게 이용할 수 있습니다.
+        </div>
+      </section>
+
+      <!-- 동의 -->
+      <section id="screen-consent" class="hidden">
+        <h2>참여 전 동의가 필요합니다</h2>
+        <p class="sub">아래 약관을 확인하고 동의해 주세요. 동의하셔야 스탬프투어에 참여할 수 있습니다.</p>
+
+        <label class="lab">이용약관 (필수)</label>
+        <div class="doc">
+          <h4>제1조 (목적)</h4>
+          <p>본 약관은 방문자가 스탬프투어(Tour 방문 인증) 서비스를 이용함에 있어 운영자와 방문자의 권리·의무 및 절차를 규정함을 목적으로 합니다.</p>
+          <h4>제2조 (이용 방법)</h4>
+          <p>방문자는 각 Tour에 비치된 QR 코드를 촬영하고 휴대폰 번호로 본인을 확인한 뒤 ‘방문확인’을 함으로써 해당 Tour 방문이 기록됩니다.</p>
+          <h4>제3조 (방문자 식별)</h4>
+          <p>휴대폰 번호는 방문자를 식별하는 유일한 값으로 사용되며, 동일 번호의 중복 방문은 1회로 처리됩니다.</p>
+          <h4>제4조 (책임)</h4>
+          <p>운영자는 천재지변, 통신 장애 등 불가항력으로 인한 서비스 중단에 대해 책임을 지지 않습니다.</p>
+        </div>
+
+        <label class="lab" style="margin-top:14px;">개인정보 수집·이용 동의 (필수)</label>
+        <div class="doc">
+          <p><b>수집 항목</b> : 휴대폰 번호, 방문 기록(방문 Tour·일시)</p>
+          <p><b>수집·이용 목적</b> : 방문자 식별, Tour 방문 인증 및 진행현황 제공, 경품(Gift) 지급 대상 확인</p>
+          <p><b>보유·이용 기간</b> : 프로젝트 종료 후 3개월까지 보관하며, 이후 지체 없이 파기합니다.</p>
+          <p><b>제3자 제공</b> : 원칙적으로 제공하지 않으며, 법령에 근거가 있는 경우에 한합니다.</p>
+          <p><b>동의 거부 권리</b> : 동의를 거부할 수 있으나, 거부 시 스탬프투어 참여가 제한됩니다.</p>
+        </div>
+
+        <div class="agree-row agree-all">
+          <input type="checkbox" id="chk-all">
+          <label for="chk-all">전체 동의합니다</label>
+        </div>
+        <div class="agree-row">
+          <input type="checkbox" id="chk-terms" class="chk-req">
+          <label for="chk-terms">[필수] 이용약관에 동의합니다</label>
+        </div>
+        <div class="agree-row">
+          <input type="checkbox" id="chk-privacy" class="chk-req">
+          <label for="chk-privacy">[필수] 개인정보 수집·이용에 동의합니다</label>
+        </div>
+        <div class="agree-row">
+          <input type="checkbox" id="chk-push">
+          <label for="chk-push">[선택] 푸시 알림 수신에 동의합니다.<br><span style="color:#94a3b8;font-size:12px;">(Gift 사용 완료 등 안내)</span></label>
+        </div>
+
+        <button class="btn btn-primary" id="btn-agree" disabled>동의하고 계속</button>
+      </section>
+
+      <!-- 휴대폰 식별 -->
+      <section id="screen-identify" class="hidden">
+        <h2>휴대폰 번호 입력</h2>
+        <p class="sub">방문 인증에 사용할 휴대폰 번호를 입력해 주세요. 다음 Tour부터는 다시 묻지 않습니다.</p>
+        <label class="lab" for="phone">휴대폰 번호</label>
+        <input id="phone" type="tel" inputmode="numeric" placeholder="01012345678" maxlength="13" autocomplete="tel">
+        <div id="identify-msg" class="msg"></div>
+        <button class="btn btn-primary" id="btn-phone">확인</button>
+      </section>
+
+      <!-- 진행현황 -->
+      <section id="screen-progress" class="hidden">
+        <div class="stamp" id="prog-emoji">🗺️</div>
+        <h2 class="center" id="prog-title">진행현황</h2>
+        <div id="prog-desc" class="prog-desc"></div>
+        <div id="prog-msg" class="msg ok center"></div>
+        <div class="prog-num" style="text-align:center;font-size:18px;">
+          방문 <b id="prog-visited">0</b><span id="prog-total"> / 0</span>
+          <span style="margin:0 10px;color:#cbd5e1;">·</span>
+          Quiz <b id="prog-quiz-solved" style="color:#138a36;">0</b><span id="prog-quiz-total"> / 0</span>
+        </div>
+        <div class="bar-wrap"><div class="bar" id="prog-bar"></div></div>
+        <div class="stat">
+          <div><div class="n" id="stat-visited" style="color:#138a36;">0</div><div class="l">방문완료</div></div>
+          <div><div class="n" id="stat-remain" style="color:#d62828;">0</div><div class="l">남은 Tour</div></div>
+          <div><div class="n" id="stat-total">0</div><div class="l">전체</div></div>
+        </div>
+        <div id="tier-list" class="tier-list"></div>
+        <div id="dest-list" class="dest-list"></div>
+        <button class="btn btn-primary" id="btn-quiz-toggle" style="margin-top:14px;" onclick="toggleQuizSection()" disabled>📝 Quiz응시하기</button>
+        <div id="quiz-list" class="quiz-list hidden"></div>
+        <div class="done-banner hidden" id="done-banner">🎉 모든 Tour를 방문했습니다!</div>
+        <div id="gift-card" class="hidden"></div>
+        <div id="visitor-prize-section" style="margin-top:14px;"></div>
+        <div id="project-period-notice" class="hidden" style="margin:10px 0;padding:10px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;color:#92400e;font-size:13px;line-height:1.6;text-align:center;"></div>
+        <button class="btn btn-primary" id="btn-scan" style="display:none;">📷 QR 스캔하기</button>
+        <button class="btn btn-ghost" id="btn-show-my-qr" style="display:none;margin-top:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;" onclick="openMyQR()">📇 내 QR 보여주기</button>
+        <button class="btn btn-ghost" id="btn-refresh" style="margin-top:10px;">새로고침</button>
+      </section>
+
+      <!-- 에러/안내 -->
+      <section id="screen-error" class="hidden">
+        <div class="stamp">⚠️</div>
+        <h2 class="center" id="err-title">안내</h2>
+        <p class="sub center" id="err-msg"></p>
+        <button class="btn btn-ghost" id="btn-retry">다시 시도</button>
+      </section>
+    </div>
+  </div>
+
+  <!-- QR 스캐너 오버레이 -->
+  <div id="scanner" class="hidden">
+    <video id="scan-video" playsinline muted></video>
+    <div class="scan-frame"></div>
+    <div class="scan-hint">QR 코드를 사각형 안에 맞춰 주세요</div>
+    <div id="scan-msg"></div>
+    <button id="scan-close">✕ 닫기</button>
+  </div>
+
+  <!-- 커스텀 알림 -->
+  <div id="alert-ov" class="alert-ov hidden">
+    <div class="alert-box">
+      <div class="alert-ico" id="alert-ico">ℹ️</div>
+      <div class="alert-msg" id="alert-msg"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" id="alert-cancel" style="display:none;flex:1;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-weight:700;">나중에</button>
+        <button class="btn btn-primary" id="alert-ok" style="flex:1;">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전시물/Tour 설명 오버레이 -->
+  <div id="dest-desc-ov">
+    <div class="dd-box">
+      <div id="dd-title" class="dd-title"></div>
+      <div id="dd-body" class="dd-body"></div>
+      <button class="dd-close" onclick="closeDestDesc()">확인</button>
+    </div>
+  </div>
+
+  <!-- Quiz 정답/오답 결과 오버레이 -->
+  <div id="quiz-result-ov">
+    <div class="qr-box">
+      <img id="qr-img" class="qr-img" src="/assets/quiz/correct.svg" alt="">
+      <div id="qr-msg" class="qr-msg">정답입니다!</div>
+      <div id="qr-sub" class="qr-sub"></div>
+      <button class="qr-close" onclick="closeQuizResult()">확인</button>
+    </div>
+  </div>
+
+  <!-- 본인 등록 QR 모달 — 등록 완료 후 사전/현장등록 아이콘 재클릭 시 표시 -->
+  <div id="visitor-myqr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;width:92vw;max-width:380px;display:flex;flex-direction:column;overflow:hidden;">
+      <div id="myqr-header" style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;padding:14px 18px;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between;">
+        <span id="myqr-title">📋 내 등록 QR</span>
+        <button onclick="closeMyQR()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="padding:18px;text-align:center;">
+        <div id="myqr-img-wrap" style="display:inline-block;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+          <img id="myqr-image" alt="등록 QR" style="display:block;width:240px;height:240px;border-radius:6px;">
+        </div>
+        <div id="myqr-status" style="margin-top:14px;font-size:13px;color:#475569;line-height:1.6;"></div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid #e2e8f0;background:#f8fafc;">
+        <button onclick="closeMyQR()" style="width:100%;background:#15803d;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인라인 개인정보 등록 모달 — 사전·현장등록 기능이 없거나 빠른 등록 시 사용 -->
+  <div id="visitor-register-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;width:92vw;max-width:440px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;padding:14px 18px;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between;">
+        <span>👤 개인정보 등록</span>
+        <button onclick="closeVisitorRegister()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:16px 18px;">
+        <!-- 기존 등록 정보 퀵로그인 박스 -->
+        <div id="vr-quick-login-box" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+          <span style="font-size:12px;color:#166534;font-weight:700;display:block;margin-bottom:8px;">이전에 등록한 정보가 존재합니다.</span>
+          <button type="button" onclick="quickLoginVisitor()" style="width:100%;background:#15803d;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+            🔑 <span id="quick-login-name">방문자</span>님 정보로 바로 로그인
+          </button>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#166534;line-height:1.55;">
+          처음 이용하시는 방문자님이시군요. 이메일 인증 후 기본 정보를 입력해 주세요. 다음 방문 시 자동 로그인됩니다.
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:5px;">이메일 <span style="color:#dc2626;">*</span></label>
+          <div style="display:flex;gap:6px;">
+            <input id="vr-email" type="email" placeholder="you@example.com" style="flex:1;padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;">
+            <button type="button" id="vr-send-btn" onclick="vrSendCode()"
+              style="background:#15803d;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">인증코드 발송</button>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:5px;">인증코드 <span style="color:#dc2626;">*</span></label>
+          <div style="display:flex;gap:6px;">
+            <input id="vr-code" type="text" inputmode="numeric" maxlength="6" placeholder="6자리 코드 입력" disabled
+              style="flex:1;padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;letter-spacing:6px;text-align:center;background:#f8fafc;">
+            <button type="button" id="vr-verify-btn" onclick="vrVerifyCode()" disabled
+              style="background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;opacity:.5;white-space:nowrap;">확인</button>
+          </div>
+          <div id="vr-code-msg" style="font-size:11px;color:#64748b;margin-top:5px;"></div>
+        </div>
+        <div id="vr-form" style="opacity:.5;pointer-events:none;border-top:1px dashed #e2e8f0;padding-top:14px;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:5px;">이름 <span style="color:#dc2626;">*</span></label>
+            <input id="vr-name" type="text" placeholder="홍길동" style="width:100%;padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:5px;">휴대폰 <span style="color:#dc2626;">*</span></label>
+            <input id="vr-mobile" type="tel" inputmode="numeric" placeholder="010-1234-5678" style="width:100%;padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;">
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#475569;margin:6px 0;">
+            <input type="checkbox" id="vr-remember" checked style="width:16px;height:16px;cursor:pointer;">
+            <span>이메일·인증코드 자동 저장 <span style="color:#94a3b8;">(다음 방문 시 자동 로그인)</span></span>
+          </label>
+          <div id="vr-msg" style="font-size:12px;margin:6px 0;color:#dc2626;"></div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;gap:8px;">
+        <button onclick="closeVisitorRegister()" style="flex:1;background:#fff;color:#475569;border:1.5px solid #cbd5e1;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;">취소</button>
+        <button id="vr-save-btn" onclick="vrSave()" disabled
+          style="flex:2;background:#15803d;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;opacity:.5;">저장 & 자동 로그인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 방문자 설정 모달 — 개인정보 확인 -->
+  <div id="visitor-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;width:90vw;max-width:420px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;padding:14px 18px;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between;">
+        <span>👤 내 정보</span>
+        <button onclick="closeVisitorSettings()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="visitor-settings-body" style="flex:1;min-height:0;overflow-y:auto;padding:16px 18px;font-size:13px;color:#1e293b;">
+        <div style="text-align:center;color:#94a3b8;padding:30px 0;">불러오는 중…</div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid #e2e8f0;background:#f8fafc;">
+        <button onclick="closeVisitorSettings()" style="width:100%;background:#15803d;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/quiz/quiz-fx.js"></script>
+  <script>
+    const parts = location.pathname.split('/').filter(Boolean); // ['v', serial, seq?]
+    const projectSerial = parts[1] || '';
+    const locationSeq = parts[2] || null; // null이면 홈(진행현황) 모드
+    const reservationToken = new URLSearchParams(location.search).get('resv') || null;
+    // 호스트 미리보기 모드 — ?preview=1 진입 시 시간 윈도우/상태 검사 우회 (메뉴 노출만 영향, 실제 기능은 백엔드 검증)
+    const previewMode = new URLSearchParams(location.search).get('preview') === '1';
+    // 랜딩페이지 '사전예약' 으로 진입 시 → 자동 로그인 후 QR 자동 표시 (show=qr)
+    const showParam = new URLSearchParams(location.search).get('show');
+
+    // ── 방문자 자동 로그인 (이메일 기반 localStorage) ──
+    const VISITOR_SAVE_KEY = `visitor_save_${projectSerial}`;
+    let currentVisitor = null;   // { email, name, profile }
+
+    function loadSavedVisitor() {
+      try {
+        const raw = localStorage.getItem(VISITOR_SAVE_KEY);
+        if (!raw) return null;
+        const d = JSON.parse(raw);
+        return d && d.email ? d : null;
+      } catch (e) { return null; }
+    }
+    function saveVisitor(data) {
+      try { localStorage.setItem(VISITOR_SAVE_KEY, JSON.stringify({ ...data, savedAt: Date.now() })); } catch (e) {}
+    }
+    function clearSavedVisitor() {
+      try { localStorage.removeItem(VISITOR_SAVE_KEY); } catch (e) {}
+    }
+
+    // 백엔드에서 프로필 가져오기
+    async function fetchVisitorProfile(email) {
+      try {
+        const r = await fetch(`/api/visitor/profile?serial=${encodeURIComponent(projectSerial)}&email=${encodeURIComponent(email)}`);
+        const d = await r.json();
+        return (r.ok && d.ok && d.found) ? d.profile : null;
+      } catch (e) { return null; }
+    }
+
+    // 우상단 영역 — 로그인 + 현재 화면에 따라 토글
+    //   • 랜딩(screen-menu) + 로그인 → 이름 + ⚙
+    //   • 랜딩(screen-menu) + 미로그인 → × 없음 (하단 닫기 버튼 사용)
+    //   • 그 외 화면 → × 항상 노출 (메뉴로 복귀)
+    function updateTopRight() {
+      const xBtn = document.getElementById('app-close');
+      const infoBox = document.getElementById('visitor-info');
+      const nameEl  = document.getElementById('visitor-name');
+      if (!xBtn || !infoBox || !nameEl) return;
+      const menu = document.getElementById('screen-menu');
+      const onMenu = !!(menu && !menu.classList.contains('hidden'));
+      const loggedIn = !!(currentVisitor && currentVisitor.name);
+      if (onMenu) {
+        // 랜딩 페이지 — × 숨김, 로그인 시에만 이름+⚙ 노출
+        xBtn.style.display = 'none';
+        if (loggedIn) {
+          infoBox.style.display = 'flex';
+          nameEl.textContent = `${currentVisitor.name}님`;
+        } else {
+          infoBox.style.display = 'none';
+        }
+      } else {
+        // 그 외 화면 — × 만 노출 (이름/⚙ 숨김)
+        xBtn.style.display = '';
+        infoBox.style.display = 'none';
+      }
+    }
+
+    // 자동 로그인 시도 — localStorage 에 저장된 이메일이 있으면 프로필 조회
+    async function autoLoginVisitor() {
+      const saved = loadSavedVisitor();
+      if (!saved || !saved.email || saved.loggedOut) return false;
+      const profile = await fetchVisitorProfile(saved.email);
+      // 라이브 프로필 조회가 실패해도, 자동저장(인증 완료) 기록이 있으면
+      // 저장된 정보만으로 세션을 복원 → 인증 절차 없이 바로 이용 가능
+      if (!profile && !saved.verified) return false;
+      const fields = (profile && profile.fields) || {};
+      const mobile = fields.mobile || fields.휴대폰 || saved.mobile || '';
+      currentVisitor = {
+        email: saved.email,
+        name: fields.name || fields.이름 || saved.name || '',
+        profile: profile || {
+          mode: 'identity', status: 'active',
+          fields: { name: saved.name || '', email: saved.email, mobile },
+        },
+      };
+      // localStorage 갱신 — 인증코드·휴대폰 등 자동저장 정보는 유지한 채 최신값 보정
+      saveVisitor({
+        email: currentVisitor.email,
+        name: currentVisitor.name || saved.name || '',
+        mobile,
+        code: saved.code,
+        verified: true,
+      });
+      updateTopRight();
+      return true;
+    }
+
+    // 설정 모달
+    function openVisitorSettings() {
+      const body = document.getElementById('visitor-settings-body');
+      const modal = document.getElementById('visitor-settings-modal');
+      if (!body || !modal) return;
+      if (!currentVisitor || !currentVisitor.profile) {
+        body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px 0;">로그인 정보가 없습니다.</div>';
+      } else {
+        const p = currentVisitor.profile;
+        const f = p.fields || {};
+        const modeLabel = p.mode === 'reservation' ? '사전등록' : (p.mode === 'entry' ? '현장등록' : p.mode || '-');
+        const statusLabel = { pending:'대기', active:'활성', used:'사용됨', cancelled:'취소' }[p.status] || p.status;
+        const won = n => Number(n || 0).toLocaleString('ko-KR') + '원';
+        const fmtDT = s => {
+          if (!s) return '-';
+          const d = new Date(s); if (isNaN(d)) return '-';
+          const z = n => String(n).padStart(2,'0');
+          return `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+        };
+        // 알려진 필드 외 나머지도 모두 노출
+        const known = ['name','email','mobile','phone','이름','이메일','휴대폰','연락처'];
+        const row = (k, v) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+          <span style="color:#64748b;font-weight:600;">${esc(k)}</span>
+          <span style="color:#1e293b;text-align:right;max-width:60%;word-break:break-all;">${esc(v)}</span>
+        </div>`;
+        let html = `
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#166534;">
+            ✓ 자동 로그인 됨 — 다음 방문 시에도 자동 로그인됩니다.
+          </div>
+          ${row('등록 유형', modeLabel)}
+          ${row('상태', statusLabel)}
+          ${row('이메일', currentVisitor.email)}`;
+        ['name','이름'].forEach(k => { if (f[k]) html += row('이름', f[k]); });
+        ['mobile','휴대폰'].forEach(k => { if (f[k]) html += row('휴대폰', f[k]); });
+        ['phone','연락처'].forEach(k => { if (f[k]) html += row('연락처', f[k]); });
+        // 기타 사용자 정의 필드
+        Object.keys(f).forEach(k => {
+          if (!known.includes(k) && f[k] != null && String(f[k]).trim() !== '') {
+            html += row(k, Array.isArray(f[k]) ? f[k].join(', ') : f[k]);
+          }
+        });
+        if (Number(p.amount) > 0) html += row('혜택 금액', won(p.amount));
+        html += row('등록일시', fmtDT(p.created_at));
+        if (p.used_at) html += row('사용일시', fmtDT(p.used_at));
+
+        // QR 코드 보여주기 버튼 추가
+        if (p.qr_image_url) {
+          html += `
+            <div style="margin-top:14px;">
+              <button onclick="closeVisitorSettings(); openMyQR();" style="width:100%;background:#15803d;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,.15);">
+                📱 내 QR 코드 보여주기
+              </button>
+            </div>
+          `;
+        }
+
+        html += `<div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e2e8f0;">
+          <button onclick="logoutVisitor()" style="width:100%;background:#fff;color:#dc2626;border:1.5px solid #fca5a5;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">🚪 로그아웃</button>
+        </div>`;
+        body.innerHTML = html;
+      }
+      modal.style.display = 'flex';
+    }
+    function closeVisitorSettings() {
+      const modal = document.getElementById('visitor-settings-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    async function logoutVisitor() {
+      const ok = await uiConfirm('로그아웃 하시겠습니까?\n(등록 정보는 기기에 보관되어 다음 방문 시 간편하게 로그인할 수 있습니다.)', {
+        icon: '🚪',
+        okText: '로그아웃',
+        cancelText: '취소'
+      });
+      if (!ok) return;
+      const saved = loadSavedVisitor();
+      const mode = (currentVisitor && currentVisitor.profile && currentVisitor.profile.mode) || 'entry';
+      if (saved) {
+        saveVisitor({ ...saved, loggedOut: true });
+      }
+      currentVisitor = null;
+      updateTopRight();
+      closeVisitorSettings();
+      
+      const targetUrl = (mode === 'reservation') ? `/reserve/${projectSerial}` : `/entry/${projectSerial}`;
+      window.location.replace(targetUrl);
+    }
+    window.logoutVisitor = logoutVisitor;
+
+    // Tour/Quiz 클릭 시 이전 활동이 있으면 진행화면으로, 없으면 false 반환 (호출자가 스캐너 진입)
+    async function loadProgressIfActive() {
+      // phone 후보 — (1) profile.fields.mobile (2) localStorage KP (이전 Tour 스캔 시 저장)
+      const candidates = [];
+      if (currentVisitor && currentVisitor.profile && currentVisitor.profile.fields) {
+        const m = String(currentVisitor.profile.fields.mobile || '').replace(/[^0-9]/g, '');
+        if (m) candidates.push(m);
+      }
+      try {
+        const stored = (lsGet && lsGet(KP)) ? String(lsGet(KP)).replace(/[^0-9]/g, '') : '';
+        if (stored && !candidates.includes(stored)) candidates.push(stored);
+      } catch (e) {}
+      const validPhones = candidates.filter(p => /^01[016789]\d{7,8}$/.test(p));
+      if (validPhones.length === 0) return false;
+
+      for (const phone of validPhones) {
+        try {
+          lsSet(KP, phone); lsSet(KC, '1');
+          const idRes = await identify(phone);
+          if (!idRes.ok) continue;
+          const r = await fetch(`/api/visitor/progress/${projectSerial}`);
+          const d = await r.json();
+          if (!r.ok || !d.ok) continue;
+          const visited = Number(d.visitedLocations || 0);
+          const quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
+          const quizAttempted = quizzes.some(q => q.attempt);
+          if (visited > 0 || quizAttempted) {
+            renderProgress(Number(d.totalLocations || 0), visited, false, quizzes, d);
+            renderProjectDesc(d.description);
+            renderTierList(d.tiers || []);
+            renderDestList(d.locations);
+            renderQuizzes(quizzes, visited);
+            return true;
+          }
+        } catch (e) { /* 다음 후보로 */ }
+      }
+      return false;
+    }
+
+    // 우상단 × 닫기 버튼 — 메뉴 외 화면에서는 메뉴로 복귀, 메뉴에서 누르면 앱 종료
+    // 출처 — landing 에서 왔으면 닫기/메뉴 시 랜딩 #menu 로 이동
+    const FROM_LANDING_V = new URLSearchParams(location.search).get('from') === 'landing';
+    // 랜딩페이지 iframe 모달로 임베드되어 동작하는지 (embed=1)
+    const EMBED_V = new URLSearchParams(location.search).get('embed') === '1';
+    function closeApp() {
+      const menu = document.getElementById('screen-menu');
+      const onMenu = menu && !menu.classList.contains('hidden');
+      // 랜딩 iframe 모달로 임베드된 경우 — 메뉴 화면에서 닫기는 부모 모달 닫기,
+      // 서브 화면(스캐너·진행 등)에서는 아래 일반 로직으로 메뉴 복귀
+      if (EMBED_V) {
+        if (onMenu) {
+          try { if (typeof closeScanner === 'function') closeScanner(); } catch (e) {}
+          try { window.parent.postMessage({ type: 'feat-close' }, '*'); } catch (e) {}
+          return;
+        }
+      } else if (FROM_LANDING_V && projectSerial) {
+        // landing 에서 진입한 경우 — 어떤 화면이든 랜딩 #menu 로 복귀
+        try { if (typeof closeScanner === 'function') closeScanner(); } catch (e) {}
+        location.href = `/landing/${projectSerial}#menu`;
+        return;
+      }
+      if (onMenu) {
+        // 이미 메뉴 화면 → 실제 닫기 시도
+        try { window.close(); } catch (e) {}
+        setTimeout(() => {
+          if (!document.hidden) { try { window.location.href = 'about:blank'; } catch (e) {} }
+        }, 250);
+        return;
+      }
+      // Tour QR 스캐너·진행 화면·인증 화면 등 → 메뉴 화면 복귀
+      try { if (typeof closeScanner === 'function') closeScanner(); } catch (e) {}
+      // 메뉴 그리드 비어있으면 (Tour QR 로 직접 진입한 경우) 다시 렌더
+      if (menu) {
+        try {
+          if (typeof renderProjectMenu === 'function' && projectInfo) {
+            renderProjectMenu();   // 그리드 채우고 메뉴 화면 표시
+          } else if (typeof show === 'function') {
+            show('screen-menu');
+          } else {
+            document.querySelectorAll('#wrap > .card > section, section[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            menu.classList.remove('hidden');
+          }
+          // seq URL 로 진입한 경우 → 현재 URL 을 /v/{serial} 로 정리 (재로드 시 메뉴 진입)
+          if (locationSeq && projectSerial) {
+            try { history.replaceState({}, '', `/v/${projectSerial}`); } catch (e) {}
+          }
+        } catch (e) {
+          location.href = projectSerial ? `/v/${projectSerial}` : '/';
+        }
+      } else {
+        location.href = projectSerial ? `/v/${projectSerial}` : '/';
+      }
+    }
+
+    // PWA: 프로젝트별 manifest 연결 + 서비스워커 등록
+    if (projectSerial) {
+      document.getElementById('manifest-link').setAttribute('href', `/api/visitor/manifest/${projectSerial}`);
+    }
+    if ('serviceWorker' in navigator) {
+      // 프로젝트별 SW 등록 — scope를 /v/{serial}/ 로 분리하여 프로젝트별 독립 PWA로 설치 가능
+      const swUrl = projectSerial ? `/v/${projectSerial}/sw.js` : '/v/sw.js';
+      const swScope = projectSerial ? `/v/${projectSerial}/` : '/v/';
+      navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(() => {});
+
+      // 서비스워커로부터 메시지 수신 시 화면 리로드
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.action === 'reload_or_refresh') {
+          console.log('Received reload_or_refresh from Service Worker, reloading page...');
+          location.reload();
+        }
+      });
+    }
+
+    const SCREENS = ['screen-loading','screen-menu','screen-consent','screen-identify','screen-progress','screen-error'];
+    function show(id) {
+      if (id !== 'screen-progress') stopGiftPoll();
+      SCREENS.forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+      try { updateTopRight(); } catch (e) {}
+    }
+    const $ = id => document.getElementById(id);
+
+    // ── 로컬 식별값(쿠키 같은 역할: 재방문 시 재입력 방지) ──
+    const KP = `tracker_phone_${projectSerial}`;
+    const KC = `tracker_consent_${projectSerial}`;
+    const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+    const hasConsent = () => lsGet(KC) === '1';
+    const getPhone = () => lsGet(KP);
+
+    function normPhone(p) { return (p || '').replace(/[^0-9]/g, ''); }
+    function validPhone(p) { return /^01[0-9]{8,9}$/.test(normPhone(p)); }
+
+    async function api(path, body) {
+      const r = await fetch(path, body
+        ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+        : {});
+      let d = {}; try { d = await r.json(); } catch (e) {}
+      return { ok: r.ok, status: r.status, d };
+    }
+
+    async function identify(phone) {
+      const { ok, d } = await api('/api/visitor/identify',
+        { project_serial: projectSerial, phone, consented: hasConsent() });
+      return { ok, error: d.error };
+    }
+
+    // ── 동의 화면 ──
+    const reqChks = Array.from(document.querySelectorAll('.chk-req'));
+    function syncAgree() {
+      const allReq = reqChks.every(c => c.checked);
+      $('btn-agree').disabled = !allReq;           // 필수 항목만 동의 버튼을 좌우함
+      const push = $('chk-push');
+      $('chk-all').checked = allReq && (!push || push.checked);
+    }
+    reqChks.forEach(c => c.addEventListener('change', syncAgree));
+    if ($('chk-push')) $('chk-push').addEventListener('change', syncAgree);
+    $('chk-all').addEventListener('change', e => {
+      reqChks.forEach(c => c.checked = e.target.checked);
+      if ($('chk-push')) $('chk-push').checked = e.target.checked;
+      syncAgree();
+    });
+    $('btn-agree').addEventListener('click', async () => {
+      lsSet(KC, '1');
+      // 푸시 알림 동의 시 권한 요청(사용자 제스처 내). 동의 화면에서 처리했으므로 이후 별도 안내는 생략.
+      const wantPush = $('chk-push') && $('chk-push').checked;
+      lsSet(`tracker_push_asked_${projectSerial}`, '1');
+      if (wantPush && ('Notification' in window) && Notification.permission !== 'denied') {
+        try { await Notification.requestPermission(); } catch (e) {}
+      }
+      afterConsent();   // 식별 완료 후 maybeAskPush가 권한 granted면 구독 처리
+    });
+
+    // ── 식별 화면 ──
+    $('phone').addEventListener('input', e => { e.target.value = normPhone(e.target.value).slice(0, 11); });
+    $('btn-phone').addEventListener('click', async () => {
+      const p = normPhone($('phone').value);
+      if (!validPhone(p)) { setMsg('identify-msg', 'err', '올바른 휴대폰 번호를 입력해 주세요. (예: 01012345678)'); return; }
+      $('btn-phone').disabled = true;
+      const { ok, error } = await identify(p);
+      $('btn-phone').disabled = false;
+      if (!ok) { setMsg('identify-msg', 'err', error || '확인에 실패했습니다.'); return; }
+      lsSet(KP, p);
+      proceedAfterIdentify();
+    });
+
+    // ── 커스텀 알림 ──
+    function uiAlert(msg, opts) {
+      return new Promise(resolve => {
+        const ov = $('alert-ov');
+        $('alert-msg').textContent = msg;
+        $('alert-ico').textContent = (opts && opts.icon) || 'ℹ️';
+        const ok = $('alert-ok');
+        $('alert-cancel').style.display = 'none';
+        ok.textContent = (opts && opts.okText) || '확인';
+        function close() { ov.classList.add('hidden'); ok.onclick = null; ov.onclick = null; resolve(); }
+        ok.onclick = close;
+        ov.onclick = e => { if (e.target === ov) close(); };
+        ov.classList.remove('hidden');
+      });
+    }
+
+    // ── 커스텀 확인(예/아니오) ── 푸시 사전 동의 등
+    function uiConfirm(msg, opts) {
+      return new Promise(resolve => {
+        const ov = $('alert-ov');
+        $('alert-msg').textContent = msg;
+        $('alert-ico').textContent = (opts && opts.icon) || '🔔';
+        const ok = $('alert-ok'), cancel = $('alert-cancel');
+        ok.textContent = (opts && opts.okText) || '확인';
+        cancel.textContent = (opts && opts.cancelText) || '취소';
+        cancel.style.display = '';
+        function close(v) { ov.classList.add('hidden'); ok.onclick = cancel.onclick = ov.onclick = null; cancel.style.display = 'none'; resolve(v); }
+        ok.onclick = () => close(true);
+        cancel.onclick = () => close(false);
+        ov.onclick = e => { if (e.target === ov) close(false); };
+        ov.classList.remove('hidden');
+      });
+    }
+
+    // ── 웹푸시 구독 ──
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return arr;
+    }
+    async function subscribePush() {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          const { ok, d } = await api('/api/visitor/vapid-public-key');
+          if (!ok || !d.key) return;
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(d.key) });
+        }
+        await api('/api/visitor/push/subscribe', { project_serial: projectSerial, subscription: sub });
+      } catch (e) {}
+    }
+    // 최초 접속(식별 후) 1회 푸시 허용 여부 확인 → 허용 시 구독
+    async function maybeAskPush() {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+        if (Notification.permission === 'granted') { subscribePush(); return; }
+        if (Notification.permission === 'denied') return;
+        const askedKey = `tracker_push_asked_${projectSerial}`;
+        if (lsGet(askedKey) === '1') return;
+        const yes = await uiConfirm('Gift 사용 완료 등 알림을 받으시려면 푸시 알림을 허용해 주세요.', { icon: '🔔', okText: '허용', cancelText: '나중에' });
+        lsSet(askedKey, '1');
+        if (!yes) return;
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') subscribePush();
+      } catch (e) {}
+    }
+
+    // ── 방문확인(자동): Tour QR로 진입/스캔하면 버튼 없이 바로 등록 후 진행현황 ──
+    async function confirmVisit(seq) {
+      show('screen-loading');
+      const { ok, d } = await api('/api/visitor/visit', { project_serial: projectSerial, location_seq: seq });
+      if (!ok) {
+        if (d.error === 'phone_required' || d.error === 'visitor_not_found') { show('screen-identify'); return; }
+        await loadProgress(false); // 시작 전/종료 등 → 현황 보여주고 사유 안내
+        setMsg('prog-msg', 'err center', d.message || d.error || '방문 등록에 실패했습니다.');
+        return;
+      }
+      if (d.alreadyVisited) {
+        // 이미 방문한 Tour를 다시 촬영한 경우
+        showProgressFrom(d, false);
+        // visit 응답에 quizzes 가 누락된 옛 캐시 대응 — 안전망
+        if (!d.quizzes) await loadProgress(false);
+        uiAlert('이미, 방문하였습니다.', { icon: '✋' });
+        return;
+      }
+      showProgressFrom(d, true);
+      // visit 응답에 quizzes 가 없으면 추가로 progress 로 갱신 → Quiz응시하기 즉시 활성화 보장
+      if (!d.quizzes) await loadProgress(false);
+      // 새로 도달한 tier 가 있으면 안내
+      if (Array.isArray(d.newly_issued_tiers) && d.newly_issued_tiers.length) {
+        const pcts = d.newly_issued_tiers.sort((a,b)=>a-b);
+        const msg = pcts.length === 1
+          ? `🎉 ${pcts[0]}% 달성! 새로운 Gift QR 이 발급되었습니다.`
+          : `🎉 ${pcts.join('%, ')}% 달성! 새로운 Gift QR 이 ${pcts.length}장 발급되었습니다.`;
+        uiAlert(msg, { icon: '🎁' });
+      }
+    }
+
+    $('btn-refresh').addEventListener('click', () => loadProgress(false));
+    $('btn-retry').addEventListener('click', () => initFlow());
+
+    function setMsg(id, cls, text) { const el = $(id); el.className = 'msg ' + (cls === 'center' ? 'center' : cls); el.textContent = text; }
+
+    function renderProgress(total, visited, justVisited, quizzes, data) {
+      data = data || {};
+      const remain = Math.max(0, total - visited);
+      const pct = total > 0 ? Math.round((visited / total) * 100) : 0;
+      $('prog-visited').textContent = visited;
+      $('prog-total').textContent = ` / ${total}`;
+      $('stat-visited').textContent = visited;
+      $('stat-remain').textContent = remain;
+      $('stat-total').textContent = total;
+      // Quiz 진행 — 전체 활성 Quiz 중 정답 맞춘 수
+      const qList = Array.isArray(quizzes) ? quizzes : [];
+      const qTotal = qList.length;
+      const qSolved = qList.filter(q => q.attempt && q.attempt.is_correct).length;
+      $('prog-quiz-solved').textContent = qSolved;
+      $('prog-quiz-total').textContent = ` / ${qTotal}`;
+      $('prog-bar').style.width = pct + '%';
+      const done = total > 0 && remain === 0;
+      $('done-banner').classList.toggle('hidden', !done);
+      $('prog-emoji').textContent = done ? '🏁' : '🗺️';
+      $('prog-title').textContent = done ? '미션 완료!' : '나의 진행현황';
+      setMsg('prog-msg', 'ok center', justVisited ? '방문이 확인되었습니다!' : '');
+      // 프로젝트 미시작/종료 시 QR 스캔 비활성화
+      const scanEnabled = data.scan_enabled !== false; // 응답이 명시적으로 false 일 때만 비활성
+      const periodEl = $('project-period-notice');
+      let periodMsg = '';
+      if (data.not_started_yet) {
+        periodMsg = `⏰ 프로젝트가 아직 개시되지 않았습니다.<br>
+          <span style="font-size:11px;color:#a16207;">시작일: <b>${data.project_from_date || '-'}</b></span>`;
+      } else if (data.already_ended) {
+        periodMsg = `🏁 프로젝트가 종료되었습니다.<br>
+          <span style="font-size:11px;color:#a16207;">종료일: <b>${data.project_to_date || '-'}</b></span>`;
+      }
+      if (periodMsg) {
+        periodEl.innerHTML = periodMsg;
+        periodEl.classList.remove('hidden');
+      } else {
+        periodEl.classList.add('hidden');
+        periodEl.innerHTML = '';
+      }
+      const isEntryUser = currentVisitor && currentVisitor.profile && currentVisitor.profile.mode === 'entry';
+      const btnScan = $('btn-scan');
+      if (isEntryUser) {
+        btnScan.style.display = 'block';
+        btnScan.disabled = true;
+        btnScan.style.opacity = '0.5';
+        btnScan.style.pointerEvents = 'none';
+        btnScan.title = '현장등록자는 QR 스캔을 할 수 없습니다.';
+      } else {
+        const shouldShow = scanEnabled && total > 0 && remain > 0;
+        btnScan.style.display = shouldShow ? 'block' : 'none';
+        btnScan.disabled = !scanEnabled;
+        btnScan.style.opacity = '';
+        btnScan.style.pointerEvents = '';
+        btnScan.title = '';
+      }
+
+      const btnShowMyQr = $('btn-show-my-qr');
+      if (btnShowMyQr) {
+        if (isEntryUser) {
+          btnShowMyQr.style.display = 'block';
+        } else {
+          btnShowMyQr.style.display = (currentVisitor && currentVisitor.profile && currentVisitor.profile.qr_image_url) ? 'block' : 'none';
+        }
+      }
+
+      show('screen-progress');
+      // 항상 Gift 카드 갱신 시도 (tier 발급된 게 있을 수 있음)
+      loadGift();
+    }
+
+    // ── Gift 카드: 발급(issued) 동안 자동 폴링 → 사용(Paid)되면 reload 없이 자동 갱신 ──
+    let giftPollTimer = null;
+    let giftRenderedStatus = null;  // 'issued' | 'used' | null (직전 렌더 상태)
+    function stopGiftPoll() { if (giftPollTimer) { clearInterval(giftPollTimer); giftPollTimer = null; } }
+    function startGiftPoll() {
+      if (giftPollTimer) return;
+      giftPollTimer = setInterval(async () => {
+        const { ok, d } = await api(`/api/visitor/gift/${projectSerial}`);
+        if (!ok || !d.eligible) return;
+        renderGifts(d.gifts || []);
+      }, 5000);
+    }
+    function renderGifts(gifts) {
+      const card = $('gift-card');
+      if (!gifts || !gifts.length) {
+        card.classList.add('hidden'); giftRenderedStatus = null; stopGiftPoll(); return;
+      }
+      const fmt = n => Number(n||0).toLocaleString('ko-KR');
+      card.innerHTML = gifts.map(g => {
+        const isUsed = g.status === 'used';
+        const tier = Number(g.threshold_pct || 100);
+        if (isUsed) {
+          const when = g.used_at ? new Date(g.used_at).toLocaleString('ko-KR') : '';
+          return `<div class="gift-box gift-used">
+            <div class="gift-ttl">🎁 ${tier}% 달성 Gift 사용 완료</div>
+            ${g.qr_url ? `<img class="gift-qr" src="${g.qr_url}" alt="사용 완료(Paid)">` : ''}
+            <div class="gift-sub">${when ? '사용일시 ' + when : '이미 사용되었습니다.'}</div>
+          </div>`;
+        }
+        return `<div class="gift-box">
+            <div class="gift-ttl">🎁 ${tier}% 달성! Gift ${fmt(g.amount)}원</div>
+            ${g.qr_url ? `<img class="gift-qr" src="${g.qr_url}" alt="Gift QR">` : ''}
+            <div class="gift-sub">가맹점에서 이 QR을 제시하세요</div>
+          </div>`;
+      }).join('');
+      // 폴링 상태 — 발급된 게 하나라도 있으면 poll (사용 시 갱신용)
+      const anyIssued = gifts.some(g => g.status === 'issued');
+      if (anyIssued) startGiftPoll(); else stopGiftPoll();
+      card.classList.remove('hidden');
+      giftRenderedStatus = anyIssued ? 'issued' : 'used';
+    }
+    // 하위호환 — 단일 응답 형태도 처리
+    function renderGift(d) {
+      if (d.gifts && Array.isArray(d.gifts)) { renderGifts(d.gifts); return; }
+      // 단일 형태 fallback
+      const g = { status: d.status, amount: d.amount, qr_url: d.qr_url, used_at: d.used_at, threshold_pct: 100 };
+      renderGifts([g]);
+    }
+    async function loadGift() {
+      const { ok, d } = await api(`/api/visitor/gift/${projectSerial}`);
+      if (!ok || !d.eligible) { renderGifts([]); return; }
+      renderGifts(d.gifts || []);
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    let destDescCache = {};
+    function renderDestList(locations) {
+      const el = $('dest-list');
+      destDescCache = {};
+      if (!locations || !locations.length) { el.innerHTML = ''; return; }
+      el.innerHTML = '<div class="dl-title">Tour 방문 현황</div>' + locations.map(l => {
+        destDescCache[l.display_seq] = { name: l.location_name, desc: l.location_desc || '' };
+        const icon = l.image_url
+          ? `<img class="dl-ico" src="${l.image_url}" alt="">`
+          : `<div class="dl-ico dl-ico-ph">${l.dest_type === 'exhibit' ? '🎨' : '📍'}</div>`;
+        const mark = l.visited ? '<span class="dl-on">✓ 방문완료</span>' : '<span class="dl-off">○ 미방문</span>';
+        const info = (l.location_desc && l.location_desc.trim())
+          ? `<button class="dl-info" onclick="showDestDesc(${l.display_seq})" title="설명 보기" aria-label="설명 보기">ⓘ</button>`
+          : '';
+        return `<div class="dl-row${l.visited ? ' dl-done' : ''}">
+            <div class="dl-seq">${l.display_seq}</div>
+            ${icon}
+            <div class="dl-name"><span class="dl-name-text">${esc(l.location_name)}</span>${info}</div>
+            ${mark}
+          </div>`;
+      }).join('');
+    }
+
+    function showDestDesc(seq) {
+      const item = destDescCache[seq];
+      if (!item) return;
+      const ov = $('dest-desc-ov');
+      $('dd-title').textContent = item.name || '';
+      $('dd-body').textContent = item.desc || '(설명이 없습니다)';
+      ov.classList.add('show');
+    }
+    function closeDestDesc() {
+      $('dest-desc-ov').classList.remove('show');
+    }
+
+    function renderProjectDesc(text) {
+      const el = $('prog-desc');
+      if (!el) return;
+      const t = (text || '').trim();
+      if (t) { el.textContent = t; el.classList.add('show'); }
+      else { el.textContent = ''; el.classList.remove('show'); }
+    }
+    function showProgressFrom(d, justVisited) {
+      const quizzes = d.quizzes || [];
+      renderProgress(Number(d.totalLocations || 0), Number(d.visitedLocations || 0), justVisited, quizzes, d);
+      renderProjectDesc(d.description);
+      renderTierList(d.tiers || []);
+      renderDestList(d.locations);
+      renderQuizzes(quizzes, Number(d.visitedLocations || 0));
+      loadAndRenderVisitorPrize();
+    }
+    async function loadProgress(justVisited) {
+      let { ok, d } = await api(`/api/visitor/progress/${projectSerial}`);
+      if (!ok) {
+        if (d.error === 'phone_required' || d.error === 'visitor_not_found') {
+          const phone = getPhone();
+          if (phone && validPhone(phone)) {
+            const idRes = await identify(phone);
+            if (idRes.ok) {
+              const retry = await api(`/api/visitor/progress/${projectSerial}`);
+              if (retry.ok) {
+                ok = true;
+                d = retry.d;
+              }
+            }
+          }
+        }
+      }
+      if (!ok) {
+        if (d.error === 'phone_required' || d.error === 'visitor_not_found') { show('screen-identify'); return; }
+        showError('진행현황을 불러오지 못했습니다.', d.message); return;
+      }
+      const quizzes = d.quizzes || [];
+      renderProgress(Number(d.totalLocations || 0), Number(d.visitedLocations || 0), justVisited, quizzes, d);
+      renderProjectDesc(d.description);
+      renderTierList(d.tiers || []);
+      renderDestList(d.locations);
+      renderQuizzes(quizzes, Number(d.visitedLocations || 0));
+      loadAndRenderVisitorPrize();
+    }
+
+    async function loadAndRenderVisitorPrize() {
+      const section = $('visitor-prize-section');
+      if (!section) return;
+
+      try {
+        const r = await fetch(`/api/visitor/projects/${projectSerial}/prize-info`);
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+          section.innerHTML = '';
+          return;
+        }
+
+        // If the project doesn't have any prize challengers setup, hide section entirely
+        if (!d.prize_challengers_limit || d.prize_challengers_limit <= 0) {
+          section.innerHTML = `
+            <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:14px; padding:18px; text-align:center;">
+              <div style="font-size:24px; margin-bottom:8px;">🎁</div>
+              <div style="font-size:14px; font-weight:800; color:#475569; margin-bottom:4px;">행운의 경품 즉석 추첨</div>
+              <div style="font-size:12px; color:#94a3b8; line-height:1.5;">경품 행사가 곧 시작될 예정입니다! 잠시만 기다려 주세요.</div>
+            </div>
+          `;
+          return;
+        }
+
+        // 1) Not Completed Tour yet
+        if (!d.eligible) {
+          section.innerHTML = `
+            <div style="background:#f1f5f9; border:1.5px solid #cbd5e1; border-radius:14px; padding:18px; text-align:center; opacity:0.85;">
+              <div style="font-size:24px; margin-bottom:8px; filter: grayscale(1);">🔒</div>
+              <div style="font-size:14px; font-weight:800; color:#475569; margin-bottom:4px;">행운의 즉석 추첨 (미션 완주 후 가능)</div>
+              <div style="font-size:12px; color:#64748b; line-height:1.5;">스탬프 Tour 미션을 <span style="color:#ef4444; font-weight:bold;">모두 완료(100% 달성)</span>하시면 경품 즉석 추첨에 응모하실 수 있는 기회가 주어집니다! 열심히 투어에 동참해 주세요!</div>
+            </div>
+          `;
+          return;
+        }
+
+        // 2) Completed, has already challenged
+        if (d.has_challenged) {
+          const res = d.challenge_result || {};
+          if (res.win && res.prize) {
+            // WINNER! (당첨)
+            const p = res.prize;
+            const imgHtml = p.image_path 
+              ? `<img src="${p.image_path}" style="width:120px; height:120px; object-fit:contain; border-radius:8px; margin: 12px auto; display:block; border:1px solid #fed7aa; background:#fff; padding:6px;">`
+              : `<div style="font-size:32px; margin:12px 0;">🎁</div>`;
+            section.innerHTML = `
+              <div style="background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:2px solid #f59e0b; border-radius:14px; padding:20px; text-align:center; box-shadow:0 4px 12px rgba(245,158,11,0.15); animation: pulse-border 2s infinite;">
+                <div style="font-size:24px; margin-bottom:4px;">🎉 축하합니다! 당첨 🎉</div>
+                <div style="font-size:15px; font-weight:800; color:#b45309; margin-bottom:12px;">경품 즉석 추첨 결과</div>
+                <div style="background:#fff; border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid #fcd34d;">
+                  <div style="font-size:12px; color:#d97706; font-weight:700;">${esc(p.rank_name)}</div>
+                  <div style="font-size:17px; font-weight:800; color:#1e293b; margin-top:4px;">${esc(p.prize_name)}</div>
+                  ${imgHtml}
+                </div>
+                <div style="font-size:12px; color:#b45309; line-height:1.6; font-weight:700;">현장 안내데스크의 스탭에게 이 화면을 보여주시고 상품을 수령하세요!</div>
+                <div style="font-size:10px; color:#d97706; margin-top:6px;">(도전 순서: ${res.slot_index}번째 참가자)</div>
+              </div>
+            `;
+          } else {
+            // LOSE! (꽝)
+            section.innerHTML = `
+              <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; text-align:center;">
+                <div style="font-size:24px; margin-bottom:8px;">🍀</div>
+                <div style="font-size:14px; font-weight:800; color:#64748b; margin-bottom:4px;">경품 추첨 결과 (꽝)</div>
+                <div style="font-size:12px; color:#94a3b8; line-height:1.5; margin-bottom:8px;">아쉽게도 이번에는 아슬아슬하게 비껴갔습니다!</div>
+                <div style="font-size:11px; color:#64748b;">스탬프 투어에 완주해주셔서 진심으로 감사합니다.</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:6px;">(도전 순서: ${res.slot_index}번째 참가자)</div>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        // 3) Completed, Ready to challenge!
+        section.innerHTML = `
+          <div style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border:1.5px solid #3b82f6; border-radius:14px; padding:20px; text-align:center; box-shadow:0 4px 12px rgba(59,130,246,0.1);">
+            <div style="font-size:28px; margin-bottom:6px; animation: bounce-slow 2s infinite;">🎁</div>
+            <div style="font-size:16px; font-weight:800; color:#1e40af; margin-bottom:6px;">행운의 즉석 경품 추첨 기회!</div>
+            <div style="font-size:12px; color:#1e3a8a; line-height:1.5; margin-bottom:16px;">
+              스탬프 Tour 완주를 진심으로 축하드립니다!<br>
+              남은 경품 중 즉석 무작위 추첨이 바로 진행됩니다.<br>
+              <strong style="color:#dc2626;">기회는 단 한 번(1회)뿐입니다.</strong> 과연 당첨될까요?
+            </div>
+            
+            <button id="btn-draw-prize" onclick="drawVisitorPrize()" style="background:#2563eb; color:#fff; font-weight:800; border:none; border-radius:10px; padding:12px 24px; width:100%; font-size:15px; box-shadow:0 4px 6px rgba(37,99,235,0.2); cursor:pointer; transition:all 0.2s;">
+              🎯 즉석 경품 추첨 도전하기!
+            </button>
+          </div>
+        `;
+
+      } catch (err) {
+        console.error("Failed to load and render prize details:", err);
+      }
+    }
+
+    async function drawVisitorPrize() {
+      const btn = $('btn-draw-prize');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '🔄 행운의 주사위 굴리는 중...';
+        btn.style.background = '#93c5fd';
+      }
+
+      try {
+        const r = await fetch(`/api/visitor/projects/${projectSerial}/prize-challenge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const d = await r.json();
+        
+        if (!r.ok || !d.ok) {
+          await uiAlert(d.message || '추첨을 진행하지 못했습니다. 잠시 후 다시 시도해주세요.');
+          loadAndRenderVisitorPrize();
+          return;
+        }
+
+        if (d.win && d.prize) {
+          await uiAlert(`🎉 축하합니다!!! [${d.prize.rank_name}] ${d.prize.prize_name}에 당첨되셨습니다!`, { icon: '🏆' });
+        } else {
+          await uiAlert('😢 아쉽지만 꽝입니다! 투어에 참여해주셔서 감사합니다.', { icon: '🍀' });
+        }
+
+        loadAndRenderVisitorPrize();
+      } catch (err) {
+        console.error(err);
+        await uiAlert('추첨 도중 오류가 발생했습니다.');
+        loadAndRenderVisitorPrize();
+      }
+    }
+
+    window.drawVisitorPrize = drawVisitorPrize;
+
+    // 단계별 보상 list (단계가 2개 이상일 때만)
+    function renderTierList(tiers) {
+      const el = $('tier-list');
+      if (!el) return;
+      // tier 가 1개(100%만) 또는 없으면 표시 안 함 (단계별 미사용)
+      if (!tiers || tiers.length < 2) { el.innerHTML = ''; return; }
+      const fmt = n => Number(n||0).toLocaleString('ko-KR');
+      el.innerHTML = '<div class="tl-title">단계별 보상</div>' + tiers.map((t, i) => {
+        const cls = t.issued ? 'issued' : (t.reached ? 'reached' : '');
+        const mark = (t.issued || t.reached) ? '<span class="tl-mark on">✓</span>' : '<span class="tl-mark off">' + (i+1) + '</span>';
+        const status = t.issued ? '🎁 발급완료' : (t.reached ? '✓ 도달' : '○ 미도달');
+        return `<div class="tl-row ${cls}">
+          ${mark}
+          <span class="tl-pct">${t.pct}%</span>
+          <span class="tl-name">${status}</span>
+          <span class="tl-amount">${fmt(t.amount)}원</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Quiz별 선택 상태 (응시 전): { quizId: Set<choiceId> }
+    const quizSel = {};
+    const quizExpanded = {}; // { quizId: bool } — 카드 펼침 여부
+    let lastQuizzes = null;  // 가장 최근 fetch된 Quiz 데이터 (재렌더용)
+    function renderQuizzes(quizzes, visitedCount) {
+      lastQuizzes = quizzes;
+      lastVisitedCount = Number(visitedCount || 0);
+      const el = $('quiz-list');
+      const btn = $('btn-quiz-toggle');
+      const visited = Number(visitedCount || 0);
+      // 버튼은 항상 표시 — 비활성 조건만 결정
+      if (btn) {
+        btn.style.display = '';
+        if (!quizzes || !quizzes.length) {
+          btn.disabled = true;
+          btn.textContent = '📝 Quiz응시하기 (등록된 Quiz 없음)';
+          el.innerHTML = '';
+          el.classList.add('hidden');
+          return;
+        }
+        if (visited < 1) {
+          btn.disabled = true;
+          btn.textContent = '📝 Quiz응시하기 (Tour 방문 후 응시 가능)';
+          el.innerHTML = '';
+          el.classList.add('hidden');
+          return;
+        }
+        btn.disabled = false;
+        const activeCount = quizzes.filter(q => q.activated && !(q.attempt && q.attempt.is_correct)).length;
+        const solvedCount = quizzes.filter(q => q.attempt && q.attempt.is_correct).length;
+        const open = !el.classList.contains('hidden');
+        btn.textContent = open
+          ? '📝 Quiz 접기'
+          : `📝 Quiz응시하기 (응시 가능 ${activeCount} · 정답 ${solvedCount}/${quizzes.length})`;
+      }
+      el.innerHTML = '<div class="ql-title">Quiz</div>' + quizzes.map((q, i) => {
+        const attempt = q.attempt;
+        const isSolved = attempt && attempt.is_correct;
+        const isWrongAttempt = attempt && !attempt.is_correct;
+        const isLocked = !q.activated;
+        const typeLabel = q.choice_type === 'multi' ? '다중 선택' : '단일 선택';
+        const locBadge = q.location_id ? '<span class="qc-loc">📍</span>' : '';
+        let statusBadge = '';
+        if (isLocked) statusBadge = '<span class="qc-status locked">잠금</span>';
+        else if (isSolved) statusBadge = '<span class="qc-status correct">정답</span>';
+        else if (isWrongAttempt) statusBadge = '<span class="qc-status wrong">다시 시도</span>';
+        else statusBadge = '<span class="qc-status unsolved">미응시</span>';
+
+        // 카드 펼침 여부 (default: 잠금=접힘, 정답완료=접힘, 그 외=펼침). 한 번이라도 토글하면 그 상태 유지.
+        if (quizExpanded[q.id] === undefined) {
+          quizExpanded[q.id] = !(isLocked || isSolved);
+        }
+        const expanded = quizExpanded[q.id];
+        const toggleIcon = expanded ? '▲' : '▼';
+
+        const header = `<div class="qc-head" onclick="toggleQuizExpand(${q.id})" style="cursor:pointer;">
+            <div class="qc-no">${i + 1}</div>
+            ${locBadge}
+            <span class="qc-type">${typeLabel}</span>
+            ${statusBadge}
+            <span class="qc-toggle">${toggleIcon}</span>
+          </div>`;
+
+        if (isLocked) {
+          const body = expanded
+            ? `<div class="qc-locked-msg">🔒 ${esc(q.activation_reason || '아직 응시할 수 없습니다.')}</div>`
+            : '';
+          return `<div class="quiz-card locked">${header}${body}</div>`;
+        }
+
+        if (!expanded) {
+          // 접힌 상태 — 질문 한 줄만 미리보기로 표시
+          const preview = `<div class="qc-q-preview">${esc(q.question)}</div>`;
+          return `<div class="quiz-card ${isSolved ? 'solved' : ''}">${header}${preview}</div>`;
+        }
+
+        const imgBlock = q.question_image_url
+          ? `<img class="qc-img" src="${q.question_image_url}" alt="">`
+          : '';
+
+        // 응시 완료(정답)면 보기는 모두 disable + 정답 표시
+        // 오답이면 재시도 가능 — 보기는 선택 가능 상태
+        const showCorrectMarking = isSolved;
+        const correctSet = (showCorrectMarking && attempt && attempt.correct_choice_ids)
+          ? new Set(attempt.correct_choice_ids) : null;
+        if (!quizSel[q.id]) quizSel[q.id] = new Set();
+        const sel = quizSel[q.id];
+        const choices = (q.choices || []).map(c => {
+          const isSel = sel.has(c.id);
+          const isCorrectAns = correctSet && correctSet.has(c.id);
+          const cls = ['qc-choice'];
+          if (showCorrectMarking) cls.push('disabled');
+          if (isSel && !showCorrectMarking) cls.push('sel');
+          if (isCorrectAns) cls.push('correct-ans');
+          const imgEl = c.image_url ? `<img class="qc-choice-img" src="${c.image_url}" alt="">` : '';
+          const onclick = showCorrectMarking ? '' : `onclick="toggleQuizChoice(${q.id}, ${c.id}, '${q.choice_type}')"`;
+          const markChar = isCorrectAns ? '✓' : (isSel && !showCorrectMarking ? '✓' : '');
+          const markStyle = isCorrectAns
+            ? 'background:#16a34a;border-color:#16a34a;'
+            : '';
+          return `<div class="${cls.join(' ')}" data-choice-id="${c.id}" ${onclick}>
+            <div class="qc-choice-mark" style="${markStyle}">${markChar}</div>
+            ${imgEl}
+            <div class="qc-choice-text">${esc(c.text)}</div>
+          </div>`;
+        }).join('');
+
+        const actionBtn = showCorrectMarking
+          ? `<div style="text-align:center;margin-top:10px;color:#138a36;font-weight:700;font-size:13px;">✓ 정답을 맞췄습니다</div>`
+          : `<button class="qc-submit" id="qsub-${q.id}" onclick="submitQuizAnswer(${q.id})" ${sel.size === 0 ? 'disabled' : ''}>정답 확인</button>`;
+
+        return `<div class="quiz-card ${isSolved ? 'solved' : ''}">
+          ${header}
+          ${imgBlock}
+          <div class="qc-q">${esc(q.question)}</div>
+          <div class="qc-choices">${choices}</div>
+          ${actionBtn}
+        </div>`;
+      }).join('');
+    }
+
+    let lastVisitedCount = 0; // 가장 최근 visitedLocations 값 캐시
+    function toggleQuizExpand(quizId) {
+      quizExpanded[quizId] = !quizExpanded[quizId];
+      if (lastQuizzes) renderQuizzes(lastQuizzes, lastVisitedCount);
+    }
+
+    function toggleQuizSection() {
+      const el = $('quiz-list');
+      const btn = $('btn-quiz-toggle');
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (btn) btn.textContent = '📝 Quiz 접기';
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        el.classList.add('hidden');
+        if (lastQuizzes) renderQuizzes(lastQuizzes, lastVisitedCount);
+      }
+    }
+
+    function toggleQuizChoice(quizId, choiceId, type) {
+      if (!quizSel[quizId]) quizSel[quizId] = new Set();
+      const sel = quizSel[quizId];
+      if (type === 'single') {
+        sel.clear(); sel.add(choiceId);
+      } else {
+        if (sel.has(choiceId)) sel.delete(choiceId);
+        else sel.add(choiceId);
+      }
+      // 전체 재렌더 대신 해당 카드의 보기 시각만 갱신 (카드 collapse / 깜빡임 방지)
+      updateQuizChoiceVisuals(quizId);
+    }
+
+    function updateQuizChoiceVisuals(quizId) {
+      const sel = quizSel[quizId] || new Set();
+      const submitBtn = document.getElementById(`qsub-${quizId}`);
+      // 제출 버튼이 있는 카드 = 응시 가능한 카드
+      if (!submitBtn) return;
+      const card = submitBtn.closest('.quiz-card');
+      if (!card) return;
+      card.querySelectorAll('.qc-choice').forEach(el => {
+        if (el.classList.contains('disabled')) return; // 정답 확인 후 disabled 카드는 그대로
+        const cid = Number(el.dataset.choiceId);
+        const isSel = sel.has(cid);
+        el.classList.toggle('sel', isSel);
+        const mark = el.querySelector('.qc-choice-mark');
+        if (mark) mark.textContent = isSel ? '✓' : '';
+      });
+      submitBtn.disabled = sel.size === 0;
+    }
+
+    async function submitQuizAnswer(quizId) {
+      const sel = quizSel[quizId];
+      if (!sel || sel.size === 0) return;
+      const submitBtn = document.getElementById(`qsub-${quizId}`);
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '제출 중...'; }
+      const { ok, d } = await api('/api/visitor/quiz-answer', {
+        project_serial: projectSerial,
+        quiz_id: quizId,
+        selected_choice_ids: Array.from(sel),
+      });
+      if (!ok) {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '정답 확인'; }
+        showError('응시 실패', (d && (d.error || d.message)) || '응시할 수 없습니다.');
+        return;
+      }
+      showQuizResult(d);
+      // 선택 초기화 + progress 다시 로드 (응시 상태 갱신)
+      delete quizSel[quizId];
+      await loadProgress(false);
+    }
+
+    function showQuizResult(d) {
+      const isCorrect = !!d.is_correct;
+      const ov = $('quiz-result-ov');
+      $('qr-img').src = isCorrect ? '/assets/quiz/correct.svg' : '/assets/quiz/wrong.svg';
+      $('qr-msg').textContent = isCorrect ? '🎉 정답입니다!' : '😢 오답입니다';
+      $('qr-msg').style.color = isCorrect ? '#138a36' : '#dc2626';
+      const fmt = n => Number(n || 0).toLocaleString('ko-KR') + '원';
+      if (isCorrect) {
+        const bonus = Number(d.bonus_added || 0);
+        if (bonus > 0) {
+          $('qr-sub').innerHTML = `Quiz 보상액 <b style="color:#138a36;">${fmt(bonus)}</b>이 Gift에 추가되었습니다.<br>` +
+            `<span style="color:#64748b;">현재까지의 Gift 예상 금액: <b style="color:#16243a;">${fmt(d.expected_total)}</b></span>`;
+        } else {
+          $('qr-sub').textContent = '잘 하셨습니다. 다음 Quiz도 도전해 보세요!';
+        }
+      } else {
+        $('qr-sub').textContent = '다시 한번 도전해 보세요.';
+      }
+      ov.classList.add('show');
+      try {
+        if (window.QuizFx) isCorrect ? QuizFx.playCorrect() : QuizFx.playWrong();
+      } catch (e) {}
+    }
+    function closeQuizResult() {
+      $('quiz-result-ov').classList.remove('show');
+    }
+
+    function showError(title, msg) { $('err-title').textContent = title || '안내'; $('err-msg').textContent = msg || ''; show('screen-error'); }
+
+    // ── 흐름 제어 ──
+    async function afterConsent() {
+      const p = getPhone();
+      if (p && validPhone(p)) {
+        const { ok } = await identify(p);   // 쿠키 설정 후에만 다음 단계로
+        if (ok) { proceedAfterIdentify(); return; }
+      }
+      show('screen-identify');
+      if (p) $('phone').value = p;
+    }
+    function proceedAfterIdentify() {
+      if (locationSeq) confirmVisit(locationSeq);  // QR로 들어온 Tour는 자동 방문확인
+      else loadProgress(false);                    // 앱 홈 실행 → 진행현황
+      maybeAskPush();                              // 최초 접속 시 푸시 허용 확인
+    }
+
+    // ── 프로젝트별 랜딩 브랜딩 (supervisor 업로드 랜딩이미지/아이콘) ──
+    function setFavicon(url) {
+      let icon = document.querySelector('link[rel="icon"]');
+      if (!icon) { icon = document.createElement('link'); icon.rel = 'icon'; document.head.appendChild(icon); }
+      icon.href = url;
+      const apple = document.querySelector('link[rel="apple-touch-icon"]');
+      if (apple) apple.href = url;
+    }
+    function applyBranding(d) {
+      if (d.project_name) {
+        $('brand-title').textContent = d.project_name;
+        $('pj-name').textContent = '스탬프투어';
+        document.title = d.project_name + ' · 스탬프투어';
+      }
+      if (d.icon_url) { $('brand-icon').src = d.icon_url; setFavicon(d.icon_url); }
+      if (d.landing_image_url) {
+        $('hero-img').src = d.landing_image_url;
+        $('hero').classList.remove('hidden');
+      }
+    }
+
+    // 사전등록/현장등록 token 으로 자동 식별 (?resv=...)
+    async function tryReservationLogin() {
+      if (!reservationToken) return false;
+      try {
+        const r = await fetch(`/api/visitor/reservation-lookup?token=${encodeURIComponent(reservationToken)}`);
+        if (!r.ok) return false;
+        const d = await r.json();
+        if (!d.ok) return false;
+        // 같은 프로젝트인지 확인
+        if (d.project_serial !== projectSerial) return false;
+        const phone = normPhone(d.phone || '');
+        if (!validPhone(phone)) return false;
+        // 동의는 사전등록 폼에서 이미 받음 → consent + phone 자동 저장
+        lsSet(KC, '1');
+        lsSet(KP, phone);
+        lsSet(`tracker_resv_${projectSerial}`, reservationToken);  // 향후 참조
+        const { ok } = await identify(phone);
+        // 사전등록(reservation) 으로 식별된 방문자도 자동저장 → 이후 재방문·랜딩에서 인증 없이 QR 이용
+        if (ok && d.email) {
+          const email = String(d.email).trim().toLowerCase();
+          saveVisitor({ email, name: d.name || '', mobile: phone, verified: true });
+          currentVisitor = {
+            email, name: d.name || '',
+            profile: {
+              mode: d.mode || 'reservation',
+              status: d.status,
+              fields: { name: d.name || '', email, mobile: phone },
+              qr_image_url: d.qr_image_url || null,
+              amount: Number(d.amount || 0),
+              created_at: d.created_at || null,
+              activated_at: d.activated_at || null,
+              used_at: d.used_at || null,
+            },
+          };
+          updateTopRight();
+        }
+        return ok;
+      } catch (e) { return false; }
+    }
+
+    let projectInfo = null;
+    async function initFlow() {
+      show('screen-loading');
+      if (!projectSerial) { showError('잘못된 접근', '유효하지 않은 QR 코드입니다.'); return; }
+      // 프로젝트별 랜딩 브랜딩 적용
+      try {
+        const info = await fetch(`/api/visitor/project/${projectSerial}`).then(r => r.json());
+        if (info && info.ok) {
+          projectInfo = info;
+          applyBranding(info);
+          applyProjectNameForInstall(info.project_name);
+        }
+      } catch (e) {}
+
+      // 자동 로그인 (localStorage 저장 이메일) — 우상단에 이름·⚙ 표시
+      try { await autoLoginVisitor(); } catch (e) {}
+
+      // 사전등록/현장등록 token 자동 식별 우선 시도
+      if (await tryReservationLogin()) { proceedAfterIdentify(); return; }
+
+      // Tour QR (seq 있음) 진입 → 기존 Tour 인증 흐름
+      if (locationSeq) {
+        if (!hasConsent()) { show('screen-consent'); return; }
+        const p = getPhone();
+        if (p && validPhone(p)) {
+          const { ok } = await identify(p);
+          if (ok) { proceedAfterIdentify(); return; }
+        }
+        show('screen-identify');
+        return;
+      }
+
+      // 홈 진입 (/v/{serial})
+      const phone = getPhone();
+      if ((currentVisitor && currentVisitor.email) || (phone && validPhone(phone))) {
+        // 이미 등록/식별된 사용자가 홈으로 바로 들어오는 경우 -> 진행현황 화면을 기본으로 보여줍니다
+        loadProgress(false);
+      } else {
+        // 통합 메뉴 표시
+        renderProjectMenu();
+      }
+      // 랜딩 '사전예약'(&show=qr) + 이미 등록(QR 보유) → QR 모달 자동 표시 (인증 불필요)
+      if (showParam === 'qr' && currentVisitor && currentVisitor.profile
+          && currentVisitor.profile.qr_image_url) {
+        openMyQR();
+      }
+      return;
+      // 아래는 기존 로직 보존 (현재 도달 불가)
+      if (!hasConsent()) { show('screen-consent'); return; }
+      const p = getPhone();
+      if (p && validPhone(p)) {
+        const { ok } = await identify(p);  // 쿠키 갱신 + 방문자 보장
+        if (ok) { proceedAfterIdentify(); return; }
+      }
+      show('screen-identify');
+      if (p) $('phone').value = p;
+    }
+
+    // ── PWA 설치 버튼 ──
+    let deferredPrompt = null;
+    const isiOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+
+    function showInstallBar() {
+      if (EMBED_V) return;        // 랜딩 iframe 모달 안에서는 설치바 숨김
+      if (isStandalone()) return; // 이미 PWA 로 실행 중
+      $('install-bar').style.display = 'block';
+      const btn = $('btn-install');
+      const iosTip = $('install-ios-tip');
+      
+      btn.disabled = false; btn.style.opacity = '';
+      if (deferredPrompt) {
+        btn.textContent = '📲 홈 화면에 앱 설치';
+        if (iosTip) iosTip.style.display = 'none';
+      } else if (isiOS) {
+        btn.textContent = '📲 앱 설치 안내 보기 (iOS)';
+        if (iosTip) iosTip.style.display = 'block';
+      } else {
+        btn.textContent = '📲 홈 화면에 앱 설치';
+        if (iosTip) iosTip.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallBar();
+    });
+
+    $('btn-install').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        try {
+          deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+        } catch (err) {}
+        deferredPrompt = null;
+        $('install-bar').style.display = 'none';
+      } else {
+        // 수동 설치 안내 팝업
+        alert(
+          "※ 홈 화면에 앱 설치(추가) 방법 안내:\n\n" +
+          "1. Android (크롬, 삼성 인터넷 등):\n" +
+          "   브라우저 우측 상단 또는 하단의 메뉴(삼점 ⋮ 또는 ☰) 버튼을 누르고, '홈 화면에 추가' 또는 '앱 설치'를 선택해 주세요.\n\n" +
+          "2. iOS (사파리 Safari):\n" +
+          "   브라우저 하단의 '공유' 아이콘(네모에 위 화살표)을 누르고, 스크롤하여 '홈 화면에 추가'를 선택해 주세요."
+        );
+      }
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      $('install-bar').style.display = 'none';
+    });
+
+    // 프로젝트 정보 로드 후 앱 이름·iOS 메타·설치바 갱신
+    function applyProjectNameForInstall(name) {
+      if (!name) return;
+      try {
+        document.title = name;
+        const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (appleTitle) appleTitle.setAttribute('content', name);
+        const titleEl = $('install-title');
+        if (titleEl) titleEl.textContent = `📲 ${name} 앱 설치`;
+        const menuTitle = $('menu-title');
+        if (menuTitle) menuTitle.textContent = name;
+      } catch (e) {}
+    }
+
+    // 프로젝트 통합 메뉴 — 기능 카드 그리드
+    function renderProjectMenu() {
+      const grid = $('menu-grid');
+      if (!grid) return;
+      const f = (projectInfo && projectInfo.features) || {};
+      const status = projectInfo && projectInfo.status;
+      const now = new Date();
+      const ymdToDate = (s) => s ? new Date(String(s).slice(0,10) + 'T00:00:00') : null;
+      const ymdToEod  = (s) => s ? new Date(String(s).slice(0,10) + 'T23:59:59') : null;
+      const fromDate = projectInfo ? ymdToDate(projectInfo.from_date) : null;
+      const toDate   = projectInfo ? ymdToEod(projectInfo.to_date)   : null;
+      const resStart = projectInfo && projectInfo.reservation_start_at ? new Date(projectInfo.reservation_start_at) : null;
+
+      // 프로젝트가 진행 가능한 상태인지 (started 또는 시작대기 일부)
+      const projectActive = status === 'started';
+      const projectPreActive = status === 'ready_to_start';
+      const projectEnded = toDate ? (now > toDate) : false;
+
+      // 미리보기 모드 — 시간 윈도우/상태 검사 우회 (활성화된 기능 모두 노출)
+      const canReservation = previewMode
+        ? !!f.reservation
+        : (!!f.reservation && !projectEnded
+          && (projectActive || projectPreActive)
+          && (!resStart || now >= resStart)
+          && (!fromDate || now < fromDate));
+      const canEntry  = previewMode ? !!f.entry  : (!!f.entry  && projectActive && !projectEnded);
+      const canTour   = previewMode ? !!f.tour   : (!!f.tour   && projectActive && !projectEnded);
+      const canQuiz   = previewMode ? !!f.quiz   : (!!f.quiz   && projectActive && !projectEnded);
+      const canSurvey = previewMode ? !!f.survey : (!!f.survey && projectActive && !projectEnded);
+      const canVote   = previewMode ? !!f.vote   : (!!f.vote   && projectActive && !projectEnded);
+
+      const items = [];
+      if (canReservation)  items.push({ key:'reservation', emoji:'📋', label:'사전등록',     desc:'미리 등록하고 혜택 받기',     url:`/reserve/${projectSerial}`, color:'#bfdbfe', fg:'#1e40af' });
+      if (canEntry)        items.push({ key:'entry',       emoji:'🎫', label:'현장등록',     desc:'행사장에서 즉시 등록',       url:`/entry/${projectSerial}`,   color:'#bbf7d0', fg:'#166534' });
+      if (canTour || canQuiz) items.push({ key:'tour',     emoji:'🎯', label: (canTour && canQuiz ? 'Tour · Quiz' : (canTour ? 'Tour' : 'Quiz')), desc:'각 장소 QR을 스캔하여 참여', action:'scan', color:'#fde68a', fg:'#92400e', primary:true });
+      if (canSurvey)       items.push({ key:'survey',      emoji:'📝', label:'설문조사',     desc:'설문 응답하고 경품 받기',     url:`/survey/${projectSerial}`,  color:'#fce7f3', fg:'#9d174d' });
+      if (canVote)         items.push({ key:'vote',        emoji:'🏆', label:'투표',         desc:'참여기업에 투표하기',         url:`/vote/${projectSerial}`,    color:'#fef3c7', fg:'#92400e' });
+
+      if (!items.length) {
+        // 왜 비어있는지 상태별 안내 메시지 분기
+        let reason = '이 프로젝트에서 제공하는 참여 기능이 없습니다.';
+        if (projectEnded) reason = '프로젝트가 종료되었습니다.';
+        else if (status === 'quoted' || status === 'deposit_wait' || status === 'deposit_confirmed') reason = '프로젝트가 아직 준비 중입니다.';
+        else if (projectPreActive && fromDate) {
+          const z = n => String(n).padStart(2,'0');
+          const d = fromDate;
+          reason = `프로젝트가 ${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())} 부터 시작됩니다.`;
+        }
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:30px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:10px;font-size:13px;line-height:1.6;">
+          ${esc(reason)}
+        </div>`;
+      } else {
+        // 인증되지 않은 방문자는 사전등록 / 현장등록 으로 안내 (Tour/Quiz/설문 차단)
+        const phone = getPhone();
+        const needsAuth = (!currentVisitor || !currentVisitor.email) && !(phone && validPhone(phone));
+        // 이미 등록된 모드 확인 — 사전등록/현장등록 아이콘 재클릭 시 QR 표시
+        const registeredMode = (currentVisitor && currentVisitor.profile && currentVisitor.profile.mode) || null;
+        grid.innerHTML = items.map(it => {
+          const isRegPage = (it.key === 'reservation' || it.key === 'entry');
+          // 등록 완료한 모드와 일치하는 아이콘 → QR 보기로 전환
+          const isMyReg = isRegPage && (
+            (it.key === 'reservation' && registeredMode === 'reservation') ||
+            (it.key === 'entry'       && registeredMode === 'entry')
+          );
+          let onclickAttr = '';
+          let badgeNote = '';
+          if (isMyReg) {
+            // 본인 등록 완료 → QR 보기 (URL 무효화)
+            onclickAttr = `onclick="event.preventDefault();openMyQR();return false;"`;
+            badgeNote = '<div style="font-size:10px;color:#15803d;margin-top:6px;font-weight:700;">✓ 등록 완료 · 클릭하여 QR 보기</div>';
+          } else if (needsAuth && !isRegPage) {
+            onclickAttr = `onclick="event.preventDefault();requireRegistration('${esc(it.label)}');return false;"`;
+          } else if (it.action === 'scan') {
+            onclickAttr = `onclick="event.preventDefault();loadProgress(false);return false;"`;
+          }
+          const href = isMyReg ? '#' : (it.url || '#');
+          const lockedNote = (needsAuth && !isRegPage && !isMyReg) ? '<div style="font-size:10px;color:#dc2626;margin-top:6px;font-weight:700;">🔒 등록 후 이용 가능</div>' : '';
+          return `<a href="${href}" ${onclickAttr} style="display:block;background:${it.color};border-radius:14px;padding:18px 12px;text-align:center;text-decoration:none;color:${it.fg};box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .15s;${it.primary?'grid-column:1/-1;':''}${(needsAuth && !isRegPage && !isMyReg)?'opacity:.7;':''}" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="font-size:32px;line-height:1;margin-bottom:8px;">${it.emoji}</div>
+            <div style="font-size:15px;font-weight:800;margin-bottom:4px;">${esc(it.label)}</div>
+            <div style="font-size:11px;color:${it.fg};opacity:.75;">${esc(it.desc)}</div>
+            ${badgeNote}
+            ${lockedNote}
+          </a>`;
+        }).join('');
+      }
+      // 미리보기 모드 배너 표시
+      const previewBanner = document.getElementById('preview-banner');
+      if (previewBanner) previewBanner.style.display = previewMode ? '' : 'none';
+      show('screen-menu');
+    }
+
+    // 미인증 방문자가 Tour/Quiz/설문 클릭 시 → 등록 페이지 또는 인라인 모달
+    async function requireRegistration(featureName) {
+      const f = (projectInfo && projectInfo.features) || {};
+      const status = projectInfo && projectInfo.status;
+      const now = new Date();
+      const ymdToDate = (s) => s ? new Date(String(s).slice(0,10) + 'T00:00:00') : null;
+      const fromDate = projectInfo ? ymdToDate(projectInfo.from_date) : null;
+
+      const reservationOpen = f.reservation && (status === 'ready_to_start' || status === 'started')
+        && (!fromDate || now < fromDate);
+      const entryOpen = f.entry && status === 'started';
+
+      if (reservationOpen) {
+        const ok = await uiConfirm(`${featureName} 을(를) 이용하려면 먼저 사전등록을 완료해야 합니다.\n\n사전등록 화면으로 이동하시겠습니까?`, {
+          icon: '📝',
+          okText: '이동하기',
+          cancelText: '취소'
+        });
+        if (ok) {
+          location.href = `/reserve/${projectSerial}`;
+        }
+        return;
+      }
+      if (entryOpen) {
+        const ok = await uiConfirm(`${featureName} 을(를) 이용하려면 먼저 현장등록을 완료해야 합니다.\n\n현장등록 화면으로 이동하시겠습니까?`, {
+          icon: '📝',
+          okText: '이동하기',
+          cancelText: '취소'
+        });
+        if (ok) {
+          location.href = `/entry/${projectSerial}`;
+        }
+        return;
+      }
+      // 사전·현장등록 모두 불가능 → 인라인 개인정보 등록 모달 표시
+      openVisitorRegister();
+    }
+
+    // 하단 "닫기" 버튼 — 랜딩 페이지에서 앱 종료
+    function closeFromMenu() {
+      // landing 에서 진입한 경우 — 랜딩 #menu 로 복귀
+      if (FROM_LANDING_V && projectSerial) {
+        location.href = `/landing/${projectSerial}#menu`;
+        return;
+      }
+      try { window.close(); } catch (e) {}
+      setTimeout(() => {
+        if (!document.hidden) { try { window.location.href = 'about:blank'; } catch (e) {} }
+      }, 250);
+    }
+
+    // ── 본인 등록 QR 모달 ──
+    function openMyQR() {
+      const modal = document.getElementById('visitor-myqr-modal');
+      if (!modal) return;
+      if (!currentVisitor || !currentVisitor.profile) {
+        alert('등록 정보를 찾을 수 없습니다.'); return;
+      }
+      const p = currentVisitor.profile;
+      const mode = p.mode === 'reservation' ? '사전등록' : (p.mode === 'entry' ? '현장등록' : '등록');
+      const title = `📋 내 ${mode} QR`;
+      document.getElementById('myqr-title').textContent = title;
+
+      const img = document.getElementById('myqr-image');
+      const wrap = document.getElementById('myqr-img-wrap');
+      const statusEl = document.getElementById('myqr-status');
+      if (p.qr_image_url) {
+        img.src = p.qr_image_url;
+        img.alt = `${mode} QR 코드`;
+        wrap.style.display = 'inline-block';
+      } else {
+        wrap.style.display = 'none';
+      }
+
+      const won = n => Number(n || 0).toLocaleString('ko-KR') + '원';
+      const fmtDT = s => {
+        if (!s) return '-';
+        const d = new Date(s); if (isNaN(d)) return '-';
+        const z = n => String(n).padStart(2,'0');
+        return `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+      };
+      const statusBadge = {
+        pending: '<span style="color:#16a34a;font-weight:700;">등록 완료</span>',
+        activated: '<span style="color:#2563eb;font-weight:700;">방문 완료</span>',
+        active : '<span style="color:#16a34a;font-weight:700;">사용 가능</span>',
+        used   : '<span style="color:#ea580c;font-weight:700;">사용 완료</span>',
+        cancelled: '<span style="color:#dc2626;font-weight:700;">취소됨</span>',
+      }[p.status] || esc(p.status || '-');
+
+      let html = `${mode} 완료 · ${statusBadge}<br>`;
+      if (Number(p.amount) > 0) html += `혜택 금액 <b>${won(p.amount)}</b><br>`;
+      html += `<span style="color:#94a3b8;font-size:11px;">등록일시 ${fmtDT(p.created_at)}</span>`;
+      if (p.used_at) html += `<br><span style="color:#ea580c;font-size:11px;">사용일시 ${fmtDT(p.used_at)}</span>`;
+      if (p.status === 'used') {
+        html += `<div style="margin-top:10px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;color:#9a3412;font-size:11px;">이 QR 은 이미 사용되었습니다.</div>`;
+      } else if (p.status === 'pending') {
+        html += `<div style="margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:11px;">현장 안내데스크에서 이 QR을 보여주시면 방문 확인 및 Gift 가 지급됩니다.</div>`;
+      } else if (p.status === 'activated' || p.status === 'active') {
+        html += `<div style="margin-top:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:11px;">가맹점에서 이 QR 을 스캔하면 Gift 가 사용됩니다.</div>`;
+      }
+      statusEl.innerHTML = html;
+      modal.style.display = 'flex';
+    }
+    function closeMyQR() {
+      const m = document.getElementById('visitor-myqr-modal');
+      if (m) m.style.display = 'none';
+      const phone = getPhone();
+      if ((currentVisitor && currentVisitor.email) || (phone && validPhone(phone))) {
+        loadProgress(false);
+      }
+    }
+
+     // ── 인라인 개인정보 등록 모달 ──
+    let vrVerifiedCode = null;
+
+    async function quickLoginVisitor() {
+      const saved = loadSavedVisitor();
+      if (!saved || !saved.email) return;
+      const msg = document.getElementById('vr-msg');
+      if (msg) msg.textContent = '로그인 시도 중…';
+      const profile = await fetchVisitorProfile(saved.email);
+      // If profile is not found on server but we have saved info with verified, we can still restore
+      if (!profile && !saved.verified) {
+        if (msg) { msg.style.color = '#dc2626'; msg.textContent = '서버에서 등록 정보를 찾을 수 없습니다. 새로운 이메일로 등록해 주세요.'; }
+        return;
+      }
+      
+      const fields = (profile && profile.fields) || {};
+      const mobile = fields.mobile || fields.휴대폰 || saved.mobile || '';
+      currentVisitor = {
+        email: saved.email,
+        name: fields.name || fields.이름 || saved.name || '',
+        profile: profile || {
+          mode: 'identity', status: 'active',
+          fields: { name: saved.name || '', email: saved.email, mobile },
+        },
+      };
+      
+      // Update/Keep saved state, mark loggedOut as false
+      saveVisitor({
+        email: currentVisitor.email,
+        name: currentVisitor.name,
+        mobile,
+        code: saved.code,
+        verified: true,
+        loggedOut: false
+      });
+      
+      closeVisitorRegister();
+      updateTopRight();
+      if (typeof renderProjectMenu === 'function' && projectInfo) renderProjectMenu();
+    }
+
+    function openVisitorRegister() {
+      const m = document.getElementById('visitor-register-modal');
+      if (!m) return;
+      
+      const saved = loadSavedVisitor();
+      const qBox = document.getElementById('vr-quick-login-box');
+      if (saved && qBox) {
+        document.getElementById('quick-login-name').textContent = saved.name || '방문자';
+        qBox.style.display = 'block';
+      } else if (qBox) {
+        qBox.style.display = 'none';
+      }
+
+      // 입력 초기화 또는 pre-fill
+      if (saved) {
+        const emailEl = document.getElementById('vr-email');
+        const nameEl = document.getElementById('vr-name');
+        const mobileEl = document.getElementById('vr-mobile');
+        if (emailEl) emailEl.value = saved.email || '';
+        if (nameEl) nameEl.value = saved.name || '';
+        if (mobileEl) mobileEl.value = saved.mobile || '';
+      } else {
+        ['vr-email','vr-code','vr-name','vr-mobile'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      }
+      
+      document.getElementById('vr-remember').checked = true;
+      document.getElementById('vr-msg').textContent = '';
+      document.getElementById('vr-code-msg').textContent = '';
+      document.getElementById('vr-code').value = ''; // 인증코드는 매번 새로 받아야 하므로 비워줌
+      document.getElementById('vr-code').disabled = true;
+      document.getElementById('vr-verify-btn').disabled = true;
+      document.getElementById('vr-verify-btn').style.opacity = '.5';
+      document.getElementById('vr-form').style.opacity = '.5';
+      document.getElementById('vr-form').style.pointerEvents = 'none';
+      document.getElementById('vr-save-btn').disabled = true;
+      document.getElementById('vr-save-btn').style.opacity = '.5';
+      vrVerifiedCode = null;
+      m.style.display = 'flex';
+    }
+    function closeVisitorRegister() {
+      const m = document.getElementById('visitor-register-modal');
+      if (m) m.style.display = 'none';
+    }
+    async function vrSendCode() {
+      const email = document.getElementById('vr-email').value.trim();
+      const msg = document.getElementById('vr-code-msg');
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.style.color = '#dc2626';
+        msg.textContent = '올바른 이메일을 입력해 주세요.'; return;
+      }
+      msg.style.color = '#64748b';
+      msg.textContent = '인증코드 발송 중…';
+      try {
+        const r = await fetch('/api/integration/email-verify/send', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, project_serial: projectSerial }),
+        });
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+          msg.style.color = '#dc2626';
+          msg.textContent = d.error === 'rate_limited' ? '잠시 후 다시 시도해 주세요.' : '발송 실패';
+          return;
+        }
+        msg.style.color = '#15803d';
+        msg.textContent = '✓ 이메일로 6자리 코드를 발송했습니다. (유효시간 10분)';
+        document.getElementById('vr-code').disabled = false;
+        document.getElementById('vr-verify-btn').disabled = false;
+        document.getElementById('vr-verify-btn').style.opacity = '1';
+        document.getElementById('vr-code').focus();
+      } catch (e) {
+        msg.style.color = '#dc2626';
+        msg.textContent = '네트워크 오류';
+      }
+    }
+    async function vrVerifyCode() {
+      const email = document.getElementById('vr-email').value.trim();
+      const code = document.getElementById('vr-code').value.trim();
+      const msg = document.getElementById('vr-code-msg');
+      if (!code || code.length !== 6) {
+        msg.style.color = '#dc2626';
+        msg.textContent = '6자리 인증코드를 입력해 주세요.'; return;
+      }
+      try {
+        const r = await fetch('/api/integration/email-verify/check', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code }),
+        });
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+          msg.style.color = '#dc2626';
+          msg.textContent = '인증코드가 일치하지 않거나 만료되었습니다.';
+          return;
+        }
+        vrVerifiedCode = code;
+        msg.style.color = '#15803d';
+        msg.textContent = '✓ 이메일 인증 완료';
+        document.getElementById('vr-form').style.opacity = '1';
+        document.getElementById('vr-form').style.pointerEvents = '';
+        document.getElementById('vr-save-btn').disabled = false;
+        document.getElementById('vr-save-btn').style.opacity = '1';
+        document.getElementById('vr-name').focus();
+      } catch (e) {
+        msg.style.color = '#dc2626';
+        msg.textContent = '네트워크 오류';
+      }
+    }
+    async function vrSave() {
+      const msg = document.getElementById('vr-msg');
+      msg.style.color = '#dc2626'; msg.textContent = '';
+      const email  = document.getElementById('vr-email').value.trim();
+      const name   = document.getElementById('vr-name').value.trim();
+      const mobile = document.getElementById('vr-mobile').value.replace(/[^0-9]/g, '');
+      if (!vrVerifiedCode) { msg.textContent = '이메일 인증을 먼저 완료해 주세요.'; return; }
+      if (!name)   { msg.textContent = '이름을 입력해 주세요.'; return; }
+      if (!/^01[016789]\d{7,8}$/.test(mobile)) { msg.textContent = '올바른 휴대폰 번호(010-XXXX-XXXX)를 입력해 주세요.'; return; }
+      try {
+        const r = await fetch('/api/visitor/identity', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serial: projectSerial, email, code: vrVerifiedCode,
+            fields: { name, email, mobile },
+          }),
+        });
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+          msg.textContent = d.message || d.error || '저장에 실패했습니다.';
+          return;
+        }
+        // 자동 저장 옵션에 따라 localStorage 갱신
+        //  — 이메일·이름·휴대폰·인증코드·verified 를 함께 저장하여
+        //    다음 방문 시 인증 절차 없이 바로 자동 로그인되도록 함
+        const remember = document.getElementById('vr-remember');
+        if (remember && remember.checked) {
+          saveVisitor({ email, name, mobile, code: vrVerifiedCode, verified: true });
+        } else {
+          // 자동저장 미선택 → 이전에 저장된 정보가 있으면 제거 (이번 세션만 유지)
+          clearSavedVisitor();
+        }
+        currentVisitor = { email, name, profile: { mode: 'identity', status: 'active', fields: { name, email, mobile } } };
+        closeVisitorRegister();
+        updateTopRight();
+        // 메뉴 재렌더 (잠금 해제)
+        if (typeof renderProjectMenu === 'function') renderProjectMenu();
+      } catch (e) {
+        msg.textContent = '네트워크 오류로 저장에 실패했습니다.';
+      }
+    }
+    // 휴대폰 자동 포매팅
+    document.addEventListener('input', function (e) {
+      if (e.target && e.target.id === 'vr-mobile') {
+        const digits = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
+        if (digits.length <= 3) e.target.value = digits;
+        else if (digits.length <= 7) e.target.value = digits.slice(0,3) + '-' + digits.slice(3);
+        else e.target.value = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
+      }
+    });
+    function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+    // 페이지 로드 직후 설치바를 노출 (iOS 안내 / Android 대기 중 표시)
+    // — Chrome 등은 beforeinstallprompt 가 즉시 또는 약간의 지연 후 발화
+    setTimeout(showInstallBar, 800);
+
+    // ── 인앱 QR 스캐너 (BarcodeDetector + 후면 카메라) ──
+    let scanStream = null, scanTimer = null, scanDetector = null, scanningNow = false;
+
+    $('btn-scan').addEventListener('click', () => openScanner(true));
+    $('scan-close').addEventListener('click', closeScanner);
+
+    async function openScanner(force = false) {
+      // 인증되지 않은 방문자는 등록 페이지로 안내
+      if (!currentVisitor || !currentVisitor.email) {
+        requireRegistration('Tour · Quiz');
+        return;
+      }
+      if (currentVisitor && currentVisitor.profile && currentVisitor.profile.mode === 'entry') {
+        alert('현장등록자는 직접 QR 스캔을 할 수 없습니다.');
+        return;
+      }
+      // 이전 Tour/Quiz 활동이 있으면 진행 화면 표시 (카메라 X)
+      if (!force) {
+        try {
+          const hadActivity = await loadProgressIfActive();
+          if (hadActivity) return;
+        } catch (e) { /* 진행조회 실패 시 그대로 스캐너 진입 */ }
+      }
+      if (!('BarcodeDetector' in window)) {
+        setMsg('prog-msg', 'err center', '이 브라우저는 앱 내 스캔을 지원하지 않습니다. 휴대폰 카메라 앱으로 QR을 찍어 주세요.');
+        return;
+      }
+      try { scanDetector = new BarcodeDetector({ formats: ['qr_code'] }); }
+      catch (e) { setMsg('prog-msg', 'err center', 'QR 스캔을 사용할 수 없습니다.'); return; }
+      try {
+        scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      } catch (e) {
+        setMsg('prog-msg', 'err center', '카메라 권한이 필요합니다. 권한을 허용해 주세요.');
+        return;
+      }
+      const v = $('scan-video');
+      v.srcObject = scanStream;
+      try { await v.play(); } catch (e) {}
+      $('scan-msg').textContent = '';
+      $('scanner').classList.remove('hidden');
+      scanningNow = true;
+      scanTick();
+    }
+
+    async function scanTick() {
+      if (!scanningNow) return;
+      try {
+        const video = $('scan-video');
+        // 비디오가 충분히 준비되지 않은 상태에서는 detect 시도 안 함
+        if (video && video.readyState >= 2 && video.videoWidth > 0) {
+          const codes = await scanDetector.detect(video);
+          if (codes && codes.length) {
+            const raw = String(codes[0].rawValue || '').trim();
+            // 빈 값 / 너무 짧음 → 무시하고 계속 스캔
+            if (raw && raw.length >= 6) { handleScan(raw); return; }
+          }
+        }
+      } catch (e) {}
+      scanTimer = setTimeout(scanTick, 250);
+    }
+
+    function closeScanner() {
+      scanningNow = false;
+      if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+      if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+      $('scan-video').srcObject = null;
+      $('scanner').classList.add('hidden');
+    }
+
+    // QR 데이터가 Tour 방문 QR 형태인지 엄격하게 검증
+    //  - 반드시 절대 URL (http/https) 이어야 함 — 빈 문자열/공백/임의 텍스트는 거부
+    //  - pathname 이 정확히 /v/{serial}/{seq} 형태
+    //  - serial / seq 가 유효한 영숫자
+    function parseQr(raw) {
+      if (!raw || typeof raw !== 'string') return null;
+      const s = raw.trim();
+      // 절대 URL 만 허용 — 상대 경로 / 일반 텍스트 거부
+      if (!/^https?:\/\//i.test(s)) return null;
+      let u;
+      try { u = new URL(s); } catch { return null; }
+      const p = u.pathname.split('/').filter(Boolean);
+      // 정확히 ['v', serial, seq] 3개 segment
+      if (p.length !== 3 || p[0] !== 'v') return null;
+      const serial = String(p[1] || '').trim();
+      const seq    = String(p[2] || '').trim();
+      // serial: 일련번호 패턴 영숫자 + 언더스코어, seq: 숫자
+      if (!/^[a-zA-Z0-9_]{3,40}$/.test(serial)) return null;
+      if (!/^\d{1,4}$/.test(seq)) return null;
+      return { serial, seq };
+    }
+
+    let lastScanAt = 0;
+    async function handleScan(raw) {
+      // 중복 인식 방지 (1.5초 디바운스)
+      const now = Date.now();
+      if (now - lastScanAt < 1500) return;
+      lastScanAt = now;
+
+      const parsed = parseQr(raw);
+      if (!parsed) {
+        // 잘못된 QR 인식 — 스캐너는 계속 동작하도록 유지하고 안내만 표시
+        $('scan-msg').textContent = '⚠ Tour QR 이 아닙니다. 정확한 QR 을 비춰주세요.';
+        $('scan-msg').style.color = '#fbbf24';
+        setTimeout(() => { $('scan-msg').textContent = ''; }, 2000);
+        return;
+      }
+      closeScanner();
+      // 다른 프로젝트 QR이면 해당 페이지로 이동, 같은 프로젝트면 앱 내에서 바로 방문 처리
+      if (parsed.serial !== projectSerial) { location.href = `/v/${parsed.serial}/${parsed.seq}`; return; }
+      confirmVisit(parsed.seq);   // 같은 프로젝트면 앱 내에서 바로 방문확인 → 진행현황
+    }
+
+    initFlow();
+  </script>
+</body>
+</html>

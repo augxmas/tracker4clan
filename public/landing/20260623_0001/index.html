@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 제3회 영주시장배 아마추어 e스포츠 대회</title>
+<style>
+  :root{--bg:#0a0e27;--bg2:#111634;--card:#161c3f;--line:#27306b;--cyan:#22d3ee;--blue:#3b82f6;--mag:#e0218a;--green:#16a34a;--red:#ef4444;--txt:#e6e9f5;--mut:#9aa3c7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px;}
+  /* header */
+  .hd{position:sticky;top:0;z-index:50;background:rgba(10,14,39,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .hd-in{max-width:1080px;margin:0 auto;padding:11px 18px;display:flex;align-items:center;gap:14px;}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:15px;}
+  .brand .ci{width:30px;height:30px;flex:none;}
+  .brand small{display:block;font-size:10px;color:var(--mut);font-weight:600;letter-spacing:1px;}
+  .nav{display:flex;gap:4px;margin-left:auto;align-items:center;}
+  .nav a{padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--mut);border-radius:8px;}
+  .nav a:hover{color:#fff;background:rgba(255,255,255,.06);}
+  .apply{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#04122a !important;font-weight:800 !important;padding:9px 16px !important;border-radius:10px !important;box-shadow:0 4px 16px rgba(34,211,238,.3);}
+  .menu-tg{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;margin-left:auto;}
+  /* hero */
+  .hero{position:relative;padding:64px 18px 56px;text-align:center;overflow:hidden;background:radial-gradient(circle at 50% -10%,rgba(59,130,246,.32),transparent 55%),radial-gradient(circle at 85% 30%,rgba(224,33,138,.18),transparent 45%);}
+  .hero .badge{display:inline-block;border:1px solid var(--cyan);color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:2px;padding:6px 16px;border-radius:999px;margin-bottom:18px;}
+  .hero h1{font-size:clamp(30px,6vw,54px);font-weight:900;line-height:1.12;letter-spacing:-1px;}
+  .hero h1 .gr{background:linear-gradient(135deg,var(--cyan),var(--blue) 60%,var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero .sub{color:var(--mut);font-size:16px;margin-top:14px;}
+  .meta-bar{display:inline-flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;margin-top:26px;background:rgba(22,28,63,.7);border:1px solid var(--line);border-radius:14px;padding:14px 26px;font-size:14px;}
+  .meta-bar b{color:#fff;}
+  .meta-bar .ic{color:var(--cyan);margin-right:5px;}
+  .hero-cta{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .hero-cta a{padding:14px 30px;border-radius:12px;font-weight:800;font-size:15px;}
+  .hero-cta .pri{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#04122a;box-shadow:0 8px 26px rgba(34,211,238,.35);}
+  .hero-cta .sec{background:rgba(255,255,255,.07);border:1px solid var(--line);color:#fff;}
+  .deadline{margin-top:18px;font-size:13px;color:#fca5a5;}
+  /* sections */
+  section.sec{padding:56px 18px;}
+  .sec-h{text-align:center;margin-bottom:34px;}
+  .sec-h .lab{display:inline-block;color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:2px;margin-bottom:8px;}
+  .sec-h h2{font-size:30px;font-weight:900;letter-spacing:-.5px;}
+  .sec-h p{color:var(--mut);font-size:14px;margin-top:6px;}
+  /* 대회안내 */
+  .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:880px;margin:0 auto;}
+  .info-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+  .info-card .k{font-size:12px;color:var(--cyan);font-weight:800;letter-spacing:1px;margin-bottom:6px;}
+  .info-card .v{font-size:15px;color:#fff;font-weight:600;}
+  .info-card .v small{color:var(--mut);font-weight:500;}
+  /* 상금 */
+  .prize{max-width:820px;margin:30px auto 0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .prize table{width:100%;border-collapse:collapse;font-size:14px;}
+  .prize th,.prize td{padding:13px 10px;text-align:center;border-bottom:1px solid var(--line);}
+  .prize thead th{background:rgba(59,130,246,.16);color:#fff;font-size:13px;font-weight:800;}
+  .prize tbody th{color:var(--cyan);font-weight:800;text-align:left;padding-left:20px;}
+  .prize .g1{color:#fde047;font-weight:800;} .prize .g2{color:#e2e8f0;} .prize .g3{color:#fdba74;}
+  .prize td:first-child{font-weight:700;}
+  /* 일정 timeline */
+  .tl{display:flex;gap:0;max-width:960px;margin:0 auto;overflow-x:auto;padding-bottom:6px;}
+  .tl-item{flex:1;min-width:150px;position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 6px;}
+  .tl-mark{position:relative;width:100%;display:flex;justify-content:center;margin-bottom:16px;height:16px;}
+  .tl-mark span{width:16px;height:16px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.18);position:relative;z-index:2;}
+  .tl-item:not(:last-child) .tl-mark::after{content:'';position:absolute;top:50%;left:50%;width:100%;height:2px;background:var(--line);transform:translateY(-50%);z-index:1;}
+  .tl-body .d{font-size:12.5px;color:var(--cyan);font-weight:800;}
+  .tl-body .t{font-size:15px;font-weight:700;color:#fff;margin-top:3px;}
+  .tl-body .s{font-size:12.5px;color:var(--mut);margin-top:3px;}
+  /* 부대행사 */
+  .side-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;max-width:920px;margin:0 auto;}
+  .side-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 16px;text-align:center;transition:transform .15s,border-color .15s;display:flex;flex-direction:column;align-items:center;min-height:155px;height:100%;box-sizing:border-box;}
+  .side-card:hover{transform:translateY(-3px);border-color:var(--cyan);}
+  .side-card .em{font-size:34px;}
+  .side-card .nm{font-size:14px;font-weight:700;color:#fff;margin-top:10px;}
+  /* 동영상 */
+  .vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+  .vcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
+  .vcard:hover{transform:translateY(-3px);border-color:var(--cyan);}
+  .vthumb{position:relative;aspect-ratio:16/9;background:#000;}
+  .vthumb img{width:100%;height:100%;object-fit:cover;}
+  .vthumb .pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+  .vthumb .pl span{width:50px;height:50px;border-radius:50%;background:rgba(239,68,68,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;padding-left:4px;}
+  .vinfo{padding:11px 13px;}
+  .vinfo .vt{font-size:13px;font-weight:700;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .vinfo .va{font-size:11px;color:var(--mut);margin-top:5px;}
+  .muted-box{text-align:center;color:var(--mut);padding:40px;border:1px dashed var(--line);border-radius:14px;}
+  /* 문의 */
+  .qna{max-width:720px;margin:0 auto;text-align:center;}
+  .qna p{color:var(--mut);margin-bottom:20px;}
+  .qbtn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#04122a;font-weight:800;padding:14px 30px;border-radius:12px;font-size:15px;box-shadow:0 8px 24px rgba(34,211,238,.3);}
+  .qrecent{margin-top:24px;display:flex;flex-direction:column;gap:8px;text-align:left;}
+  .qitem{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;gap:10px;align-items:center;}
+  .qitem .qb{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;}
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;background:var(--bg2);}
+  footer b{color:#fff;}
+  /* player modal */
+  .pov{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.9);align-items:center;justify-content:center;padding:16px;}
+  .pov.open{display:flex;}
+  .pbox{width:100%;max-width:880px;}
+  .pframe{position:relative;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;}
+  .pframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .pclose{display:flex;justify-content:flex-end;margin-bottom:8px;}
+  .pclose button{background:rgba(255,255,255,.15);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;}
+  /* mobile nav */
+  .mnav{display:none;position:fixed;inset:0;background:rgba(8,11,30,.97);z-index:60;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+  .mnav.open{display:flex;}
+  .mnav a{font-size:20px;font-weight:700;color:#fff;}
+  .mnav .cl{position:absolute;top:18px;right:20px;background:none;border:none;color:#fff;font-size:32px;}
+  @media(max-width:840px){.nav{display:none;}.menu-tg{display:block;}.info-grid{grid-template-columns:1fr;}.brand small{display:none;}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .consulting-detail{animation:fadeIn 0.3s ease-out;}
+  .side-card.active{border-color:var(--cyan);box-shadow:0 0 16px rgba(34,211,238,.25);transform:translateY(-3px);}
+  .consulting-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media(max-width:768px){
+    .consulting-body-grid{grid-template-columns:1fr;}
+  }
+  .game-tab {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--mut);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13.5px;
+    text-align: center;
+  }
+  .game-tab:hover {
+    color: #fff;
+    border-color: rgba(34, 211, 238, 0.5);
+    background: rgba(34, 211, 238, 0.03);
+  }
+  .game-tab.active {
+    background: rgba(34, 211, 238, 0.1);
+    border-color: var(--cyan);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+  }
+
+  /* 타임테이블 */
+  .timetable-container {
+    max-width: 920px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow-x: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+  .timetable-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+    text-align: center;
+  }
+  .timetable-table th, .timetable-table td {
+    padding: 12px 8px;
+    border: 1px solid var(--line);
+    color: var(--txt);
+    vertical-align: middle;
+  }
+  .timetable-table thead th {
+    background: rgba(34, 211, 238, 0.08);
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    padding: 16px 8px;
+  }
+  .timetable-table thead th.time-col {
+    color: var(--cyan);
+  }
+  .timetable-table tbody td.time-cell {
+    background: rgba(59, 130, 246, 0.04);
+    font-weight: 700;
+    color: #fff;
+    font-size: 13px;
+  }
+  .timetable-table tbody td.merged-all {
+    background: rgba(34, 211, 238, 0.04);
+    font-weight: 800;
+    color: var(--cyan);
+    font-size: 14px;
+  }
+  .timetable-table tbody td.merged-break {
+    background: rgba(255, 255, 255, 0.02);
+    font-weight: 800;
+    color: var(--mut);
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+  .timetable-table tbody td.highlight-cell {
+    font-weight: 700;
+    color: #fff;
+  }
+  .timetable-table tbody td.sub-cell {
+    color: var(--mut);
+    font-size: 12.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="hd">
+  <div class="hd-in">
+    <a href="https://www.yeongju.go.kr/open_content/tour/index.do" target="_blank" rel="noopener" class="brand">
+      <svg class="ci" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M50 14 C24 14 8 32 8 52 C20 47 34 47 42 54 C36 60 38 70 48 70 C44 62 52 56 58 60 C66 52 80 50 92 54 C92 33 76 14 50 14 Z" fill="#16a34a"/>
+        <rect x="46" y="58" width="8" height="30" fill="#16a34a"/>
+        <circle cx="44" cy="62" r="11" fill="#fff"/><circle cx="58" cy="48" r="11" fill="#fff"/>
+        <circle cx="55" cy="72" r="10" fill="#16a34a"/><circle cx="74" cy="62" r="11" fill="#ef4444"/>
+      </svg>
+      <span>영주시<small>YEONGJU CITY</small></span>
+    </a>
+    <nav class="nav">
+      <a href="#info">대회안내</a>
+      <a href="#side">부대행사</a>
+      <a href="#video">동영상</a>
+      <a href="#qna">문의하기</a>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfL2_gf0HYYb2k1lxB_ViEfak4_jMBTnkhy0OENScoF01fN_A/viewform?pli=1" target="_blank" rel="noopener" class="apply">🎮 참가신청</a>
+    </nav>
+    <button class="menu-tg" onclick="document.getElementById('mnav').classList.add('open')">☰</button>
+  </div>
+</header>
+<div class="mnav" id="mnav">
+  <button class="cl" onclick="document.getElementById('mnav').classList.remove('open')">×</button>
+  <a href="#info" onclick="mclose()">대회안내</a>
+  <a href="#side" onclick="mclose()">부대행사</a>
+  <a href="#video" onclick="mclose()">동영상</a>
+  <a href="#qna" onclick="mclose()">문의하기</a>
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfL2_gf0HYYb2k1lxB_ViEfak4_jMBTnkhy0OENScoF01fN_A/viewform?pli=1" target="_blank" rel="noopener" class="apply" style="padding:12px 24px !important;">🎮 참가신청</a>
+</div>
+
+<!-- 히어로 -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="badge">YEONGJU CITY e-SPORTS 2026</div>
+    <h1>제3회 <span class="gr">영주시장배</span><br>아마추어 e스포츠 대회</h1>
+    <p class="sub">전국 아마추어 게이머 누구나 — 리그 오브 레전드 · 발로란트 · 브롤스타즈</p>
+    <div class="meta-bar">
+      <span><span class="ic">🗓</span>본선·결승 <b>2026.08.01(토)</b></span>
+      <span><span class="ic">🖥</span>예선 <b>07.19 ~ 07.26 온라인</b></span>
+      <span><span class="ic">📍</span><b>영주 국민체육센터</b></span>
+    </div>
+    <div class="hero-cta">
+      <a class="pri" href="https://docs.google.com/forms/d/e/1FAIpQLSfL2_gf0HYYb2k1lxB_ViEfak4_jMBTnkhy0OENScoF01fN_A/viewform?pli=1" target="_blank" rel="noopener">🎮 참가신청 하기</a>
+      <a class="sec" href="#info">대회 안내 보기 →</a>
+    </div>
+    <div class="deadline">⏰ 접수 마감 — 2026년 7월 17일(금) 23:59</div>
+  </div>
+</section>
+
+<!-- 대회안내 -->
+<section class="sec" id="info" style="background:var(--bg2);">
+  <div class="wrap">
+    <div class="sec-h"><div class="lab">ABOUT</div><h2>대회 안내</h2></div>
+    <div class="info-grid">
+      <div class="info-card"><div class="k">대회명</div><div class="v">2026 제3회 영주시장배 아마추어 e스포츠 대회</div></div>
+      <div class="info-card"><div class="k">종목</div><div class="v">리그 오브 레전드 · 발로란트 · 브롤스타즈</div></div>
+      <div class="info-card"><div class="k">접수기간</div><div class="v">~ 2026년 7월 17일(금) 23:59</div></div>
+      <div class="info-card"><div class="k">일시</div><div class="v">결선 2026.08.01(토)<br><small>예선 2026.07.19(일) ~ 07.26(일)</small></div></div>
+      <div class="info-card"><div class="k">장소</div><div class="v">영주시 국민체육센터<br><small>경북 영주시 가흥로 109</small></div></div>
+      <div class="info-card"><div class="k">참가대상</div><div class="v">전국 아마추어 선수 누구나<br><small>※ 본인 명의의 계정으로만 참여 가능</small></div></div>
+    </div>
+
+    <!-- 상금 -->
+    <div class="prize">
+      <table>
+        <thead><tr><th style="text-align:left;padding-left:20px;">종목 / 순위</th><th>🥇 1위</th><th>🥈 2위</th><th>🥉 3위</th></tr></thead>
+        <tbody>
+          <tr><th>리그 오브 레전드</th><td class="g1">3,000,000원</td><td class="g2">1,500,000원</td><td class="g3">1,000,000원</td></tr>
+          <tr><th>발로란트</th><td class="g1">1,500,000원</td><td class="g2">1,000,000원</td><td class="g3">500,000원</td></tr>
+          <tr><th>브롤스타즈</th><td class="g1">1,000,000원</td><td class="g2">500,000원</td><td class="g3">300,000원</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center;color:var(--mut);font-size:12px;margin-top:12px;">※ 상금은 제세금(4.4%)을 제외한 금액으로만 지급될 예정입니다.</p>
+
+    <!-- 일정 -->
+    <div class="sec-h" style="margin-top:50px;"><div class="lab">SCHEDULE</div><h2>대회 일정</h2></div>
+    <div class="tl">
+      <div class="tl-item"><div class="tl-mark"><span></span></div><div class="tl-body"><div class="d">~ 07.17(금) 23:59</div><div class="t">참가 접수</div><div class="s">온라인 신청서 제출</div></div></div>
+      <div class="tl-item"><div class="tl-mark"><span></span></div><div class="tl-body"><div class="d">07.19(일) ~ 07.26(일)</div><div class="t">예선 (온라인)</div><div class="s">종목별 온라인 예선 진행</div></div></div>
+      <div class="tl-item"><div class="tl-mark"><span></span></div><div class="tl-body"><div class="d">2026.08.01(토)</div><div class="t">본선 · 결승</div><div class="s">영주 국민체육센터 (오프라인)</div></div></div>
+      <div class="tl-item"><div class="tl-mark"><span></span></div><div class="tl-body"><div class="d">모집 종료 후</div><div class="t">세부 일정 안내 예정</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 부대행사 -->
+<section class="sec" id="side">
+  <div class="wrap">
+    <div class="sec-h"><div class="lab">EVENTS</div><h2>부대행사</h2><p>대회 현장에서 즐기는 다양한 체험 프로그램</p></div>
+    <div class="side-grid">
+      <div class="side-card" id="tshirt-card" onclick="toggleTshirt()" style="cursor:pointer;" title="클릭하여 상세 티셔츠 만들기 안내 보기">
+        <div class="em">👕</div>
+        <div class="nm">티셔츠 만들기</div>
+        <span style="font-size:11px;color:var(--cyan);font-weight:800;display:block;margin-top:auto;padding-top:10px;">안내 보기 ▾</span>
+      </div>
+      <div class="side-card" id="consulting-card" onclick="toggleConsulting()" style="cursor:pointer;" title="클릭하여 상세 상담 안내 보기">
+        <div class="em">🎓</div>
+        <div class="nm">스포츠 학과<br>진학 상담</div>
+        <span style="font-size:11px;color:var(--cyan);font-weight:800;display:block;margin-top:auto;padding-top:10px;">안내 보기 ▾</span>
+      </div>
+      <div class="side-card" id="game-card" onclick="toggleGame()" style="cursor:pointer;" title="클릭하여 상세 게임 체험존 안내 보기">
+        <div class="em">🕹️</div>
+        <div class="nm">게임 체험존</div>
+        <span style="font-size:11px;color:var(--cyan);font-weight:800;display:block;margin-top:auto;padding-top:10px;">안내 보기 ▾</span>
+      </div>
+      <div class="side-card" id="drone-card" onclick="toggleDrone()" style="cursor:pointer;" title="클릭하여 상세 드론 체험 안내 보기">
+        <div class="em">🚁</div>
+        <div class="nm">드론 체험존</div>
+        <span style="font-size:11px;color:var(--cyan);font-weight:800;display:block;margin-top:auto;padding-top:10px;">안내 보기 ▾</span>
+      </div>
+      <div class="side-card" id="luckydraw-card" onclick="toggleLuckydraw()" style="cursor:pointer;" title="클릭하여 상세 럭키드로우 안내 보기">
+        <div class="em">🎁</div>
+        <div class="nm">플리마켓 · 포토존<br>럭키드로우 등</div>
+        <span style="font-size:11px;color:var(--cyan);font-weight:800;display:block;margin-top:auto;padding-top:10px;">안내 보기 ▾</span>
+      </div>
+    </div>
+
+    <!-- 게임 체험존 상세 정보 (클릭 시 노출) -->
+    <div id="game-section" class="consulting-detail" style="display:none; margin-top:40px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+        <h3 style="font-size:20px; font-weight:800; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <span>🕹️</span> 게임 체험존 상세 안내
+        </h3>
+        <button onclick="toggleGame(false)" style="background:none; border:none; color:var(--mut); font-size:24px; cursor:pointer; font-weight:bold;">&times;</button>
+      </div>
+
+      <p style="color:var(--txt); font-size:14px; margin-bottom:24px; line-height:1.6; word-break:keep-all;">
+        게임 체험존에는 총 4개의 실감형 및 디지털 스포츠 게임 프로그램이 준비되어 있습니다. 아래 탭을 선택해 각 게임의 상세 운영 안내를 확인해 보세요!
+      </p>
+
+      <!-- 게임 탭 목록 -->
+      <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.06);">
+        <button class="game-tab active" id="gt-1" onclick="switchGameTab(1)">01. 스크린 배드민턴</button>
+        <button class="game-tab" id="gt-2" onclick="switchGameTab(2)">02. 디지털 하이킹</button>
+        <button class="game-tab" id="gt-3" onclick="switchGameTab(3)">03. 풍선 터뜨리기</button>
+        <button class="game-tab" id="gt-4" onclick="switchGameTab(4)">04. 드론 체험</button>
+      </div>
+
+      <!-- 게임 내용들 -->
+      <!-- 01. 스크린 배드민턴 -->
+      <div id="game-tab-content-1" class="game-tab-content" style="display:block;">
+        <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">01. 콕 때리고 싶은 날! (스크린 배드민턴 체험)</h4>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+            셔틀콕 발사기와 디지털 시스템을 연동해 실제 배드민턴 라켓으로 셔틀콕을 타격하는 실감형 스포츠 체험입니다.
+          </p>
+        </div>
+        
+        <div class="consulting-body-grid" style="margin-bottom:24px;">
+          <!-- 운영 시간 & 체험 방법 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              체험 개요
+            </h5>
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">운영 시간</p>
+            <p style="color:var(--txt); font-size:14px; margin-bottom:16px; font-weight:700;">10:30 ~ 18:00</p>
+            
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">체험 방법</p>
+            <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+              참가자는 실제 배드민턴 라켓을 사용해 발사기에서 날아오는 셔틀콕을 타격합니다. 제한 시간 동안 성공한 타격 횟수에 따라 점수가 기록됩니다.
+            </p>
+          </div>
+          
+          <!-- 운영 방식 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              운영 방식
+            </h5>
+            <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>셔틀콕 발사기와 연동된 배드민턴 체험 장비 활용</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>제한 시간 내 셔틀콕 타격 점수 기록</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>참가자별 점수 확인 및 순위 집계</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>행사 종료 후 고득점자 순으로 경품 증정</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 상품 리스트 -->
+        <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:#f59e0b; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span>🎁</span> 상품 리스트
+          </h5>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px;">
+            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:12px; text-align:center;">
+              <div style="font-size:12px; color:#f59e0b; font-weight:800; margin-bottom:4px;">🥇 1위</div>
+              <div style="font-size:13.5px; font-weight:700; color:#fff;">배드민턴 라켓 세트</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:12px; text-align:center;">
+              <div style="font-size:12px; color:#f59e0b; font-weight:800; margin-bottom:4px;">🥈 2위</div>
+              <div style="font-size:13.5px; font-weight:700; color:#fff;">배드민턴 가방</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:12px; text-align:center;">
+              <div style="font-size:12px; color:#f59e0b; font-weight:800; margin-bottom:4px;">🥉 3위</div>
+              <div style="font-size:13.5px; font-weight:700; color:#fff;">티셔츠</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(34,211,238,0.2); border-radius:8px; padding:12px; text-align:center;">
+              <div style="font-size:11px; color:var(--cyan); font-weight:800; margin-bottom:4px;">⚡ 선착순 50명</div>
+              <div style="font-size:13px; font-weight:700; color:#fff;">손목 보호대 제공</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02. 디지털 하이킹 -->
+      <div id="game-tab-content-2" class="game-tab-content" style="display:none;">
+        <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">02. 달려봐 영주! (디지털 하이킹 체험)</h4>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+            스테퍼 또는 트레드밀 위를 직접 걸으며 화면 속 영주시 주요 관광 코스를 탐방하는 몰입형 디지털 하이킹 체험입니다.
+          </p>
+        </div>
+        
+        <div class="consulting-body-grid">
+          <!-- 운영 시간 & 체험 방법 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              체험 개요
+            </h5>
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">운영 시간</p>
+            <p style="color:var(--txt); font-size:14px; margin-bottom:16px; font-weight:700;">10:30 ~ 18:00</p>
+            
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">체험 방법</p>
+            <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+              참가자가 스테퍼 또는 트레드밀 위에서 걷거나 달리면 움직임과 속도에 맞춰 화면 속 관광 코스가 실시간으로 진행됩니다.
+            </p>
+          </div>
+          
+          <!-- 운영 방식 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              운영 방식
+            </h5>
+            <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>스테퍼 또는 트레드밀과 디지털 콘텐츠 연동</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>참가자의 걸음과 속도에 따라 화면 속 코스 진행</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>영주시 주요 관광지와 자연경관을 배경으로 콘텐츠 구성</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>관광 홍보와 게임 요소를 결합한 체험 프로그램 운영</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03. 풍선 터뜨리기 -->
+      <div id="game-tab-content-3" class="game-tab-content" style="display:none;">
+        <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">03. 진격의 발바닥 (인터랙티브 풍선 터뜨리기)</h4>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+            참가자의 발걸음에 반응하는 바닥 인터랙션 기술을 활용해 화면 속 풍선을 밟아 터뜨리며 점수를 획득하는 체험입니다.
+          </p>
+        </div>
+        
+        <div class="consulting-body-grid">
+          <!-- 운영 시간 & 체험 방법 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              체험 개요
+            </h5>
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">운영 시간</p>
+            <p style="color:var(--txt); font-size:14px; margin-bottom:16px; font-weight:700;">10:30 ~ 18:00</p>
+            
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">체험 방법</p>
+            <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+              바닥 화면에 나타나는 풍선을 발로 밟아 터뜨리면 점수가 올라갑니다. 참가자는 제한 시간 동안 최대한 많은 풍선을 터뜨려 높은 점수에 도전합니다.
+            </p>
+          </div>
+          
+          <!-- 운영 방식 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              운영 방식
+            </h5>
+            <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>발걸음에 반응하는 바닥 인터랙션 시스템 활용</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>화면에 나타나는 풍선을 발로 밟아 점수 획득</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>제한 시간 동안 참가자별 점수 실시간 기록</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>점수 경쟁을 통한 게임형 체험 운영</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04. 드론 체험 -->
+      <div id="game-tab-content-4" class="game-tab-content" style="display:none;">
+        <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">04. 드론 체험존</h4>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+            드론의 기본 조작 방법을 배우고, 정해진 코스를 직접 비행해보는 참여형 체험 프로그램입니다.
+          </p>
+        </div>
+        
+        <div class="consulting-body-grid">
+          <!-- 운영 시간 & 체험 방법 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              체험 개요
+            </h5>
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">운영 시간</p>
+            <p style="color:var(--txt); font-size:14px; margin-bottom:16px; font-weight:700;">10:30 ~ 18:00</p>
+            
+            <p style="color:var(--mut); font-size:13px; margin-bottom:4px;">체험 방법</p>
+            <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+              운영 스태프의 안내에 따라 드론 조종법과 안전수칙을 익힌 뒤, 지정된 체험 구역에서 드론을 직접 조종합니다. 참가자는 장애물 통과, 착륙 지점 맞추기 등 간단한 미션에 도전할 수 있습니다.
+            </p>
+          </div>
+          
+          <!-- 운영 방식 -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+            <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+              운영 방식
+            </h5>
+            <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>드론 조작법과 안전수칙 사전 안내</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>전문 운영요원의 지도 아래 체험 진행</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>지정된 비행 구역과 코스를 활용한 드론 조종</span></li>
+              <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>장애물 통과 및 착륙 등 단계별 미션 운영</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 드론 체험존 상세 정보 (클릭 시 노출) -->
+    <div id="drone-section" class="consulting-detail" style="display:none; margin-top:40px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+        <h3 style="font-size:20px; font-weight:800; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <span>🚁</span> 드론 체험존 상세 안내
+        </h3>
+        <button onclick="toggleDrone(false)" style="background:none; border:none; color:var(--mut); font-size:24px; cursor:pointer; font-weight:bold;">&times;</button>
+      </div>
+      
+      <div class="consulting-intro" style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:28px;">
+        <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:8px;">드론 체험존</h4>
+        <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+          드론의 기본 조작 방법을 배우고, 정해진 코스를 직접 비행해보는 참여형 체험 프로그램입니다.
+        </p>
+      </div>
+
+      <div class="consulting-body-grid" style="margin-bottom:28px;">
+        <!-- 운영 시간 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            운영 시간
+          </h5>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; font-weight:700;">
+            10:30 ~ 18:00
+          </p>
+        </div>
+
+        <!-- 체험 방법 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            체험 방법
+          </h5>
+          <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+            운영 스태프의 안내에 따라 드론 조종법과 안전수칙을 익힌 뒤, 지정된 체험 구역에서 드론을 직접 조종합니다. 참가자는 장애물 통과, 착륙 지점 맞추기 등 간단한 미션에 도전할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+        <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+          운영 방식
+        </h5>
+        <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+          <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>드론 조작법과 안전수칙 사전 안내</span></li>
+          <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>전문 운영요원의 지도 아래 체험 진행</span></li>
+          <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>지정된 비행 구역과 코스를 활용한 드론 조종</span></li>
+          <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>장애물 통과 및 착륙 등 단계별 미션 운영</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 티셔츠 만들기 상세 정보 (클릭 시 노출) -->
+    <div id="tshirt-section" class="consulting-detail" style="display:none; margin-top:40px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+        <h3 style="font-size:20px; font-weight:800; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <span>👕</span> 티셔츠 만들기 상세 안내
+        </h3>
+        <button onclick="toggleTshirt(false)" style="background:none; border:none; color:var(--mut); font-size:24px; cursor:pointer; font-weight:bold;">&times;</button>
+      </div>
+      
+      <div class="consulting-intro" style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:28px;">
+        <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:8px;">체험 방법</h4>
+        <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+          참가자는 준비된 디자인 중 원하는 이미지를 선택합니다. 운영 스태프가 프레스 장비를 활용해 선택한 디자인을 티셔츠에 인쇄하며, 완성된 티셔츠는 참가자에게 기념품으로 제공합니다.
+        </p>
+      </div>
+
+      <div class="consulting-body-grid" style="margin-bottom:28px;">
+        <!-- 운영 시간 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            운영 시간
+          </h5>
+          <p style="color:var(--txt); font-size:14px; line-height:1.6; font-weight:700;">
+            10:30 ~ 18:00
+          </p>
+        </div>
+
+        <!-- 운영 방식 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            운영 방식
+          </h5>
+          <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt); line-height:1.6;">
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>영주시 마스코트 ‘힐리’를 활용한 다양한 디자인 제공</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>참가자가 원하는 티셔츠 디자인 직접 선택</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>운영 스태프가 프레스 장비를 활용해 현장에서 즉시 제작</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>완성된 티셔츠를 참가자에게 기념품으로 제공</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 진학 상담 상세 정보 (클릭 시 노출) -->
+    <div id="consulting-section" class="consulting-detail" style="display:none; margin-top:40px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+        <h3 style="font-size:20px; font-weight:800; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <span>🎓</span> 스포츠 학과 진학 상담 상세 안내
+        </h3>
+        <button onclick="toggleConsulting(false)" style="background:none; border:none; color:var(--mut); font-size:24px; cursor:pointer; font-weight:bold;">&times;</button>
+      </div>
+      
+      <div class="consulting-intro" style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:28px;">
+        <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:8px;">현직 이스포츠 전문가에게 직접 듣는 맞춤형 진학 상담</h4>
+        <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+          현재 이스포츠 산업 현장에서 활동 중인 전문가가 직접 상담을 진행합니다. <br>
+          대학 및 학과 선택부터 선수, 구단 운영, 대회 기획, 게임산업 진로까지 실제 현장 경험을 바탕으로 구체적인 진학 방향을 안내합니다.
+        </p>
+      </div>
+
+      <div class="consulting-body-grid" style="margin-bottom:28px;">
+        <!-- 주요 경력 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            주요 경력
+          </h5>
+          <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt);">
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>마음이엔에이 대표이사</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>대전이스포츠경기장 운영</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>㈜락스이스포츠 대표이사</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>카트라이더·배틀그라운드 모바일 등 이스포츠 구단 및 대회 운영</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>우송정보대학교 e스포츠과 교수</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>게임 개발사 및 게임 유통·마케팅 기업 운영</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>지스타 한국국제게임전시회 운영 경력</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>국내외 게임 라이선스, 수출 및 해외사업 경험</span></li>
+          </ul>
+        </div>
+
+        <!-- 전문 상담 분야 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            전문 상담 분야
+          </h5>
+          <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt);">
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>이스포츠 관련 대학 및 학과 진학 상담</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>게임·이스포츠 산업 진로 설계</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>프로게이머 및 구단 운영 분야 진로 상담</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>게임기획·개발·마케팅·대회 운영 직무 안내</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>유학 및 해외 게임산업 진출 상담</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 한 줄 소개 -->
+      <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:12px; padding:16px 20px; text-align:center;">
+        <span style="display:block; font-size:11px; font-weight:800; color:var(--cyan); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">한 줄 소개</span>
+        <p style="color:#fff; font-size:14px; font-weight:700; word-break:keep-all;">
+          "게임산업 현장 경험과 대학 교육 경력을 바탕으로 학생에게 맞는 이스포츠 진학과 진로 방향을 안내합니다."
+        </p>
+      </div>
+    </div>
+
+    <!-- 럭키드로우 상세 정보 (클릭 시 노출) -->
+    <div id="luckydraw-section" class="consulting-detail" style="display:none; margin-top:40px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+        <h3 style="font-size:20px; font-weight:800; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <span>🎁</span> 럭키드로우 상세 안내
+        </h3>
+        <button onclick="toggleLuckydraw(false)" style="background:none; border:none; color:var(--mut); font-size:24px; cursor:pointer; font-weight:bold;">&times;</button>
+      </div>
+      
+      <div class="consulting-intro" style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:28px;">
+        <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:8px;">럭키드로우</h4>
+        <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
+          부대행사 체험을 완료한 참가자가 다양한 경품에 도전할 수 있는 참여형 이벤트입니다.
+        </p>
+      </div>
+
+      <!-- 이미지 추가 -->
+      <div style="margin-bottom:28px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#000; text-align:center;">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784078271102_af244abcebca90c9.jpg" alt="럭키드로우" style="max-width:100%; height:auto; display:block; margin:0 auto; max-height:480px; object-fit:contain;" />
+      </div>
+
+      <div class="consulting-body-grid" style="margin-bottom:28px;">
+        <!-- 참여 방법 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            참여 방법
+          </h5>
+          <p style="color:var(--txt); font-size:13.5px; line-height:1.6; word-break:keep-all;">
+            지정된 부대행사에 참여해 스탬프를 모두 획득한 뒤 럭키드로우 부스를 방문합니다. 참여 확인 후 추첨을 진행하며, 결과에 따라 경품을 받을 수 있습니다.
+          </p>
+        </div>
+
+        <!-- 운영 방식 -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:12px; padding:20px;">
+          <h5 style="font-size:15px; font-weight:800; color:var(--cyan); margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%;"></span>
+            운영 방식
+          </h5>
+          <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--txt);">
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>지정된 부대행사 참여 후 럭키드로우 참가 기회 제공</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>참여 조건 충족 여부 및 스탬프 확인</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>모바일을 활용한 즉석 추첨</span></li>
+            <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>당첨 결과에 따라 현장에서 경품 지급 안내</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 타임테이블 -->
+<section class="sec" id="timetable" style="background:var(--bg);">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="lab">TIMETABLE</div>
+      <h2>타임테이블</h2>
+      <p>대회 당일 전체 경기 및 행사 일정</p>
+    </div>
+    
+    <div class="timetable-container" id="timetable-wrapper">
+      <table class="timetable-table" id="timetable-table-el">
+        <thead>
+          <tr>
+            <th class="time-col" style="width: 15%;">시간</th>
+            <th style="width: 30%; background: rgba(59, 130, 246, 0.12); color: var(--cyan);">메인 경기장</th>
+            <th style="width: 30%;">보조 경기장</th>
+            <th style="width: 25%; background: rgba(224, 33, 138, 0.12); color: #f472b6;">브롤스타즈</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 09:00 ~ -->
+          <tr>
+            <td class="time-cell">09:00 ~</td>
+            <td colspan="3" class="merged-all" style="color: #67e8f9;">선수 체크인</td>
+          </tr>
+          <!-- 10:00 ~ -->
+          <tr>
+            <td class="time-cell">10:00 ~</td>
+            <td colspan="3" class="merged-all" style="color: var(--cyan);">개회식</td>
+          </tr>
+          <!-- 10:30 ~ -->
+          <tr>
+            <td class="time-cell">10:30 ~</td>
+            <td rowspan="2" class="highlight-cell" style="background: rgba(59, 130, 246, 0.05);">LOL 4강 1경기</td>
+            <td rowspan="2" class="highlight-cell">LOL 4강 2경기</td>
+            <td class="sub-cell">128강 1R ~ 16R</td>
+          </tr>
+          <!-- 11:00 ~ -->
+          <tr>
+            <td class="time-cell">11:00 ~</td>
+            <!-- 메인, 보조 경기장은 rowspan="2"로 병합됨 -->
+            <td class="sub-cell">128강 17R ~ 32R</td>
+          </tr>
+          <!-- 11:30 ~ -->
+          <tr>
+            <td class="time-cell">11:30 ~</td>
+            <td rowspan="2" class="highlight-cell" style="background: rgba(59, 130, 246, 0.05);">발로란트 4강 1경기</td>
+            <td rowspan="2" class="highlight-cell">발로란트 4강 2경기</td>
+            <td class="sub-cell">128강 33R ~ 48R</td>
+          </tr>
+          <!-- 12:00 ~ -->
+          <tr>
+            <td class="time-cell">12:00 ~</td>
+            <!-- 메인, 보조 경기장은 rowspan="2"로 병합됨 -->
+            <td class="sub-cell">128강 49R ~ 64R</td>
+          </tr>
+          <!-- 12:30 ~ -->
+          <tr>
+            <td class="time-cell">12:30 ~</td>
+            <td colspan="3" class="merged-break">BREAK TIME</td>
+          </tr>
+          <!-- 13:00 ~ -->
+          <tr>
+            <td class="time-cell">13:00 ~</td>
+            <td rowspan="4" class="highlight-cell" style="background: rgba(59, 130, 246, 0.08); font-size: 15px; color: #fde047;">LOL 결승</td>
+            <td rowspan="2" class="highlight-cell">LOL 3/4위전</td>
+            <td class="sub-cell">64강 1R ~ 16R</td>
+          </tr>
+          <!-- 13:30 ~ -->
+          <tr>
+            <td class="time-cell">13:30 ~</td>
+            <!-- 메인 결승 rowspan -->
+            <!-- 보조 3/4 rowspan -->
+            <td class="sub-cell">64강 17R ~ 32R</td>
+          </tr>
+          <!-- 14:00 ~ -->
+          <tr>
+            <td class="time-cell">14:00 ~</td>
+            <!-- 메인 결승 rowspan -->
+            <td rowspan="2" class="highlight-cell">발로란트 3/4위전</td>
+            <td class="sub-cell">32강 1R ~ 16R</td>
+          </tr>
+          <!-- 14:30 ~ -->
+          <tr>
+            <td class="time-cell">14:30 ~</td>
+            <!-- 메인 결승 rowspan -->
+            <!-- 보조 3/4 rowspan -->
+            <td class="sub-cell" style="color: #fff; font-weight: 700;">16강 및 8강</td>
+          </tr>
+          <!-- 15:00 ~ -->
+          <tr>
+            <td class="time-cell">15:00 ~</td>
+            <td rowspan="2" class="highlight-cell" style="background: rgba(224, 33, 138, 0.06); font-size: 15px; color: #f472b6;">브롤스타즈 결승</td>
+            <td rowspan="2" style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td class="sub-cell" style="color: #fff; font-weight: 700;">4강 및 3/4위전</td>
+          </tr>
+          <!-- 15:30 ~ -->
+          <tr>
+            <td class="time-cell">15:30 ~</td>
+            <!-- 브롤스타즈 결승 rowspan -->
+            <!-- 보조 경기장 rowspan -->
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 16:00 ~ -->
+          <tr>
+            <td class="time-cell">16:00 ~</td>
+            <td rowspan="5" class="highlight-cell" style="background: rgba(59, 130, 246, 0.08); font-size: 15px; color: #fde047;">발로란트 결승</td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 16:30 ~ -->
+          <tr>
+            <td class="time-cell">16:30 ~</td>
+            <!-- 발로란트 결승 rowspan -->
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 17:00 ~ -->
+          <tr>
+            <td class="time-cell">17:00 ~</td>
+            <!-- 발로란트 결승 rowspan -->
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 17:30 ~ -->
+          <tr>
+            <td class="time-cell">17:30 ~</td>
+            <!-- 발로란트 결승 rowspan -->
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 18:00 ~ -->
+          <tr>
+            <td class="time-cell">18:00 ~</td>
+            <!-- 발로란트 결승 rowspan -->
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+            <td style="background: rgba(255, 255, 255, 0.01);"></td>
+          </tr>
+          <!-- 18:30 ~ -->
+          <tr>
+            <td class="time-cell">18:30 ~</td>
+            <td colspan="3" class="merged-all" style="color: #a78bfa;">시상식 및 폐회식</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 동영상 -->
+<section class="sec" id="video" style="background:var(--bg2);">
+  <div class="wrap">
+    <div class="sec-h"><div class="lab">VIDEO</div><h2>동영상</h2><p>지난 대회 영상과 하이라이트</p></div>
+    <div class="vid-grid" id="vid-grid"><div class="muted-box" style="grid-column:1/-1;">불러오는 중…</div></div>
+    <div style="text-align:center;margin-top:18px;"><a href="/video/20260623_0001" style="color:var(--cyan);font-size:14px;font-weight:700;">전체 동영상 보기 →</a></div>
+  </div>
+</section>
+
+<!-- 문의하기 -->
+<section class="sec" id="qna">
+  <div class="wrap qna">
+    <div class="sec-h"><div class="lab">Q&amp;A</div><h2>문의하기</h2></div>
+    <p>대회 관련 궁금한 점은 문의 게시판에 남겨주세요.<br>답변이 등록되면 이메일·푸시로 알려드립니다.</p>
+    <a class="qbtn" href="/inquiry/20260623_0001">💬 문의 게시판 바로가기</a>
+    <div class="qrecent" id="q-recent"></div>
+  </div>
+</section>
+
+<footer>
+  <div style="font-weight:800;color:#fff;font-size:15px;margin-bottom:8px;">2026 제3회 영주시장배 아마추어 e스포츠 대회</div>
+  <div>주최 · 주관 : <b>영주시</b> · 영주시 국민체육센터 (경북 영주시 가흥로 109)</div>
+  <div style="margin-top:12px;"><a href="https://docs.google.com/forms/d/e/1FAIpQLSfL2_gf0HYYb2k1lxB_ViEfak4_jMBTnkhy0OENScoF01fN_A/viewform?pli=1" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:700;">🎮 참가신청 하기</a></div>
+  <div style="margin-top:14px;font-size:11px;color:#5b647f;">© 2026 YEONGJU CITY. All rights reserved.</div>
+</footer>
+
+<!-- 비디오 플레이어 -->
+<div class="pov" id="pov">
+  <div class="pbox">
+    <div class="pclose"><button onclick="closeP()">×</button></div>
+    <div class="pframe" id="pframe"></div>
+  </div>
+</div>
+
+<script src="/assets/notif-popup.js"></script>
+<script>
+const SERIAL = '20260623_0001';
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function mclose(){document.getElementById('mnav').classList.remove('open');}
+
+// 부대행사 진학 상담 토글
+function toggleConsulting(show) {
+  const sec = document.getElementById('consulting-section');
+  const card = document.getElementById('consulting-card');
+  const otherIds = [
+    { s: 'luckydraw-section', c: 'luckydraw-card' },
+    { s: 'tshirt-section', c: 'tshirt-card' },
+    { s: 'drone-section', c: 'drone-card' },
+    { s: 'game-section', c: 'game-card' }
+  ];
+  
+  if (show === undefined) {
+    show = sec.style.display === 'none';
+  }
+  if (show) {
+    otherIds.forEach(item => {
+      const otherSec = document.getElementById(item.s);
+      const otherCard = document.getElementById(item.c);
+      if (otherSec) otherSec.style.display = 'none';
+      if (otherCard) otherCard.classList.remove('active');
+    });
+    sec.style.display = 'block';
+    card.classList.add('active');
+    setTimeout(() => {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    sec.style.display = 'none';
+    card.classList.remove('active');
+  }
+}
+
+// 부대행사 럭키드로우 토글
+function toggleLuckydraw(show) {
+  const sec = document.getElementById('luckydraw-section');
+  const card = document.getElementById('luckydraw-card');
+  const otherIds = [
+    { s: 'consulting-section', c: 'consulting-card' },
+    { s: 'tshirt-section', c: 'tshirt-card' },
+    { s: 'drone-section', c: 'drone-card' },
+    { s: 'game-section', c: 'game-card' }
+  ];
+  
+  if (show === undefined) {
+    show = sec.style.display === 'none';
+  }
+  if (show) {
+    otherIds.forEach(item => {
+      const otherSec = document.getElementById(item.s);
+      const otherCard = document.getElementById(item.c);
+      if (otherSec) otherSec.style.display = 'none';
+      if (otherCard) otherCard.classList.remove('active');
+    });
+    sec.style.display = 'block';
+    card.classList.add('active');
+    setTimeout(() => {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    sec.style.display = 'none';
+    card.classList.remove('active');
+  }
+}
+
+// 부대행사 티셔츠 만들기 토글
+function toggleTshirt(show) {
+  const sec = document.getElementById('tshirt-section');
+  const card = document.getElementById('tshirt-card');
+  const otherIds = [
+    { s: 'consulting-section', c: 'consulting-card' },
+    { s: 'luckydraw-section', c: 'luckydraw-card' },
+    { s: 'drone-section', c: 'drone-card' },
+    { s: 'game-section', c: 'game-card' }
+  ];
+  
+  if (show === undefined) {
+    show = sec.style.display === 'none';
+  }
+  if (show) {
+    otherIds.forEach(item => {
+      const otherSec = document.getElementById(item.s);
+      const otherCard = document.getElementById(item.c);
+      if (otherSec) otherSec.style.display = 'none';
+      if (otherCard) otherCard.classList.remove('active');
+    });
+    sec.style.display = 'block';
+    card.classList.add('active');
+    setTimeout(() => {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    sec.style.display = 'none';
+    card.classList.remove('active');
+  }
+}
+
+// 부대행사 드론 체험 토글
+function toggleDrone(show) {
+  const sec = document.getElementById('drone-section');
+  const card = document.getElementById('drone-card');
+  const otherIds = [
+    { s: 'consulting-section', c: 'consulting-card' },
+    { s: 'luckydraw-section', c: 'luckydraw-card' },
+    { s: 'tshirt-section', c: 'tshirt-card' },
+    { s: 'game-section', c: 'game-card' }
+  ];
+  
+  if (show === undefined) {
+    show = sec.style.display === 'none';
+  }
+  if (show) {
+    otherIds.forEach(item => {
+      const otherSec = document.getElementById(item.s);
+      const otherCard = document.getElementById(item.c);
+      if (otherSec) otherSec.style.display = 'none';
+      if (otherCard) otherCard.classList.remove('active');
+    });
+    sec.style.display = 'block';
+    card.classList.add('active');
+    setTimeout(() => {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    sec.style.display = 'none';
+    card.classList.remove('active');
+  }
+}
+
+// 부대행사 게임 체험존 토글
+function toggleGame(show) {
+  const sec = document.getElementById('game-section');
+  const card = document.getElementById('game-card');
+  const otherIds = [
+    { s: 'consulting-section', c: 'consulting-card' },
+    { s: 'luckydraw-section', c: 'luckydraw-card' },
+    { s: 'tshirt-section', c: 'tshirt-card' },
+    { s: 'drone-section', c: 'drone-card' }
+  ];
+  
+  if (show === undefined) {
+    show = sec.style.display === 'none';
+  }
+  if (show) {
+    otherIds.forEach(item => {
+      const otherSec = document.getElementById(item.s);
+      const otherCard = document.getElementById(item.c);
+      if (otherSec) otherSec.style.display = 'none';
+      if (otherCard) otherCard.classList.remove('active');
+    });
+    sec.style.display = 'block';
+    card.classList.add('active');
+    setTimeout(() => {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  } else {
+    sec.style.display = 'none';
+    card.classList.remove('active');
+  }
+}
+
+// 게임 체험존 탭 전환
+function switchGameTab(tabIndex) {
+  // 탭 버튼 active 클래스 제어
+  const tabs = document.querySelectorAll('.game-tab');
+  tabs.forEach((tab, idx) => {
+    if (idx + 1 === tabIndex) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  // 콘텐츠 표시 제어
+  const contents = document.querySelectorAll('.game-tab-content');
+  contents.forEach((content, idx) => {
+    if (idx + 1 === tabIndex) {
+      content.style.display = 'block';
+    } else {
+      content.style.display = 'none';
+    }
+  });
+}
+
+// 동영상
+let VIDS=[];
+fetch(`/api/video/public/projects/${SERIAL}/videos`).then(r=>r.json()).then(d=>{
+  const g=document.getElementById('vid-grid');
+  VIDS=(d&&d.videos)||[];
+  if(!VIDS.length){g.innerHTML='<div class="muted-box" style="grid-column:1/-1;">등록된 동영상이 없습니다.</div>';return;}
+  g.innerHTML=VIDS.map((v,i)=>`<div class="vcard" onclick="playV(${i})">
+    <div class="vthumb"><img src="${esc(v.thumbnail_url)}" alt="" loading="lazy"><div class="pl"><span>▶</span></div></div>
+    <div class="vinfo"><div class="vt">${esc(v.title||'')}</div><div class="va">${esc(v.author||'')}</div></div></div>`).join('');
+}).catch(()=>{document.getElementById('vid-grid').innerHTML='<div class="muted-box" style="grid-column:1/-1;">동영상을 불러오지 못했습니다.</div>';});
+function playV(i){const v=VIDS[i];if(!v)return;document.getElementById('pframe').innerHTML=`<iframe src="${esc(v.embed_url)}?autoplay=1&rel=0" allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen></iframe>`;document.getElementById('pov').classList.add('open');}
+function closeP(){document.getElementById('pframe').innerHTML='';document.getElementById('pov').classList.remove('open');}
+document.getElementById('pov').addEventListener('click',e=>{if(e.target.id==='pov')closeP();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeP();});
+
+// 최근 공개 문의
+fetch(`/api/inquiry/public/projects/${SERIAL}/inquiries`).then(r=>r.json()).then(d=>{
+  const wrap=document.getElementById('q-recent');
+  const pub=((d&&d.inquiries)||[]).filter(q=>q.is_public).slice(0,5);
+  if(!pub.length){wrap.innerHTML='';return;}
+  wrap.innerHTML='<div style="font-size:13px;color:var(--mut);margin-top:8px;">최근 공개 문의</div>'+pub.map(q=>`
+    <a class="qitem" href="/inquiry/${SERIAL}?id=${q.id}">
+      <span class="qb" style="${q.answered?'background:#064e3b;color:#6ee7b7;':'background:#3b2f0b;color:#fcd34d;'}">${q.answered?'답변완료':'접수'}</span>
+      <span style="flex:1;color:#fff;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(q.title)}</span>
+      <span style="font-size:11px;color:var(--mut);">${esc(q.created_date||'')}</span></a>`).join('');
+}).catch(()=>{});
+
+// 활성 알림 팝업 (등록된 알림/공지)
+if(window.NotifPopup) NotifPopup.auto(SERIAL);
+
+// 스무스 스크롤
+document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const id=a.getAttribute('href').slice(1);const el=document.getElementById(id);if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth',block:'start'});}}));
+</script>
+</body>
+</html>
