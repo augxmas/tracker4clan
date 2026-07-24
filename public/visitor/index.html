@@ -502,6 +502,12 @@
     const VISITOR_SAVE_KEY = `visitor_save_${projectSerial}`;
     let currentVisitor = null;   // { email, name, profile }
 
+    function isMobilePhone() {
+      const mobileUA = /Android.+Mobile|iPhone|iPod|Windows Phone|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+      const compactTouch = window.matchMedia && window.matchMedia('(max-width: 768px) and (pointer: coarse)').matches;
+      return mobileUA || compactTouch;
+    }
+
     function loadSavedVisitor() {
       try {
         const raw = localStorage.getItem(VISITOR_SAVE_KEY);
@@ -1004,13 +1010,17 @@
         periodEl.innerHTML = '';
       }
       const isEntryUser = currentVisitor && currentVisitor.profile && currentVisitor.profile.mode === 'entry';
+      const isLoggedInUser = !!(currentVisitor && currentVisitor.profile);
+      const mobileQrMode = isMobilePhone() && isLoggedInUser;
       const btnScan = $('btn-scan');
-      if (isEntryUser) {
+      if (mobileQrMode || isEntryUser) {
         btnScan.style.display = 'block';
         btnScan.disabled = true;
         btnScan.style.opacity = '0.5';
         btnScan.style.pointerEvents = 'none';
-        btnScan.title = '현장등록자는 QR 스캔을 할 수 없습니다.';
+        btnScan.title = mobileQrMode
+          ? '모바일에서는 내 QR을 현장 담당자에게 보여주세요.'
+          : '현장등록자는 QR 스캔을 할 수 없습니다.';
       } else {
         const shouldShow = scanEnabled && total > 0 && remain > 0;
         btnScan.style.display = shouldShow ? 'block' : 'none';
@@ -1022,7 +1032,7 @@
 
       const btnShowMyQr = $('btn-show-my-qr');
       if (btnShowMyQr) {
-        if (isEntryUser) {
+        if (mobileQrMode || isEntryUser) {
           btnShowMyQr.style.display = 'block';
         } else {
           btnShowMyQr.style.display = (currentVisitor && currentVisitor.profile && currentVisitor.profile.qr_image_url) ? 'block' : 'none';
@@ -1893,7 +1903,7 @@
     }
 
     // ── 본인 등록 QR 모달 ──
-    function openMyQR() {
+    async function openMyQR() {
       const modal = document.getElementById('visitor-myqr-modal');
       if (!modal) return;
       if (!currentVisitor || !currentVisitor.profile) {
@@ -1907,8 +1917,19 @@
       const img = document.getElementById('myqr-image');
       const wrap = document.getElementById('myqr-img-wrap');
       const statusEl = document.getElementById('myqr-status');
-      if (p.qr_image_url) {
-        img.src = p.qr_image_url;
+      let qrImageUrl = p.qr_image_url || '';
+      modal.style.display = 'flex';
+      if (!qrImageUrl) {
+        wrap.style.display = 'none';
+        statusEl.textContent = '사용자 식별 QR을 생성하고 있습니다…';
+        try {
+          const response = await fetch(`/api/visitor/mission-qr/${encodeURIComponent(projectSerial)}`);
+          const result = await response.json();
+          if (response.ok && result.ok && result.dataUrl) qrImageUrl = result.dataUrl;
+        } catch (e) {}
+      }
+      if (qrImageUrl) {
+        img.src = qrImageUrl;
         img.alt = `${mode} QR 코드`;
         wrap.style.display = 'inline-block';
       } else {
@@ -1941,8 +1962,10 @@
       } else if (p.status === 'activated' || p.status === 'active') {
         html += `<div style="margin-top:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:11px;">가맹점에서 이 QR 을 스캔하면 Gift 가 사용됩니다.</div>`;
       }
+      if (!qrImageUrl) {
+        html += `<div style="margin-top:10px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:11px;">사용자 식별 QR을 불러오지 못했습니다. 로그인 상태를 확인한 후 다시 시도해 주세요.</div>`;
+      }
       statusEl.innerHTML = html;
-      modal.style.display = 'flex';
     }
     function closeMyQR() {
       const m = document.getElementById('visitor-myqr-modal');
@@ -2166,6 +2189,10 @@
       // 인증되지 않은 방문자는 등록 페이지로 안내
       if (!currentVisitor || !currentVisitor.email) {
         requireRegistration('Tour · Quiz');
+        return;
+      }
+      if (isMobilePhone()) {
+        alert('모바일에서는 QR 스캔 대신 아래의 ‘내 QR 보여주기’를 이용해 주세요.');
         return;
       }
       if (currentVisitor && currentVisitor.profile && currentVisitor.profile.mode === 'entry') {

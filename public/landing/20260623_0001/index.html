@@ -110,8 +110,15 @@
   .consulting-detail{animation:fadeIn 0.3s ease-out;}
   .side-card.active{border-color:var(--cyan);box-shadow:0 0 16px rgba(34,211,238,.25);transform:translateY(-3px);}
   .consulting-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .detail-image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .detail-image-grid.two{grid-template-columns:repeat(2,1fr);}
+  .detail-image-grid img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);}
+  .detail-image-single{max-width:720px;margin:24px auto 0;}
+  .detail-image-single img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);}
   @media(max-width:768px){
     .consulting-body-grid{grid-template-columns:1fr;}
+    .detail-image-grid{grid-template-columns:1fr;}
+    .detail-image-grid.two{grid-template-columns:1fr;}
   }
   .game-tab {
     flex: 1;
@@ -198,6 +205,29 @@
   .timetable-table tbody td.sub-cell {
     color: var(--mut);
     font-size: 12.5px;
+  }
+  /* 오시는 길 / 주차안내 */
+  .visit-tabs{display:flex;max-width:520px;margin:0 auto 24px;padding:5px;background:rgba(10,14,39,.6);border:1px solid var(--line);border-radius:12px;}
+  .visit-tab{flex:1;padding:11px 18px;border:0;border-radius:8px;background:transparent;color:var(--mut);font:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:background .2s,color .2s;}
+  .visit-tab.active{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#04122a;box-shadow:0 4px 14px rgba(34,211,238,.22);}
+  .visit-panel{max-width:920px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;}
+  .visit-panel[hidden]{display:none;}
+  .visit-panel h3{color:#fff;font-size:21px;margin-bottom:18px;}
+  .visit-summary{padding:16px 18px;margin-bottom:20px;border-left:4px solid var(--cyan);border-radius:0 10px 10px 0;background:rgba(34,211,238,.06);font-size:14px;}
+  .visit-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+  .visit-info-card{padding:16px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:10px;text-align:center;}
+  .visit-info-card b{display:block;color:var(--cyan);font-size:13px;margin-bottom:3px;}
+  .visit-info-card span{color:#fff;font-size:15px;font-weight:800;}
+  .visit-copy{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:20px 0;}
+  .visit-copy>div{padding:18px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:10px;}
+  .visit-copy h4{color:var(--cyan);font-size:14px;margin-bottom:9px;}
+  .visit-copy ul{padding-left:19px;color:var(--txt);font-size:13.5px;line-height:1.8;}
+  .visit-map{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#000;}
+  .visit-map img{display:block;width:100%;height:auto;}
+  .parking-notice{padding:16px 18px;border:1px solid rgba(245,158,11,.25);border-radius:10px;background:rgba(245,158,11,.07);color:var(--txt);font-size:14px;line-height:1.75;word-break:keep-all;}
+  @media(max-width:768px){
+    .visit-panel{padding:20px 16px;}
+    .visit-info-grid,.visit-copy{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -338,8 +368,8 @@
       <!-- 게임 탭 목록 -->
       <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.06);">
         <button class="game-tab active" id="gt-1" onclick="switchGameTab(1)">01. 스크린 배드민턴</button>
-        <button class="game-tab" id="gt-2" onclick="switchGameTab(2)">02. 디지털 하이킹</button>
-        <button class="game-tab" id="gt-3" onclick="switchGameTab(3)">03. 풍선 터뜨리기</button>
+        <button class="game-tab" id="gt-2" onclick="switchGameTab(2)">02. 달려봐 영주</button>
+        <button class="game-tab" id="gt-3" onclick="switchGameTab(3)">03. 진격의 발다닥</button>
         <button class="game-tab" id="gt-4" onclick="switchGameTab(4)">04. 드론 체험</button>
       </div>
 
@@ -384,6 +414,12 @@
           </div>
         </div>
 
+        <div class="detail-image-grid" aria-label="스크린 배드민턴 상세 이미지" style="margin-bottom:24px;">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784893030436_6e3e6440b913002c.png" alt="스크린 배드민턴 상세 이미지 1" loading="lazy">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784893061266_4722cc9db8ed2fde.jpg" alt="스크린 배드민턴 상세 이미지 2" loading="lazy">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784893176758_5d15bac1f1d1efb8.jpg" alt="스크린 배드민턴 상세 이미지 3" loading="lazy">
+        </div>
+
         <!-- 상품 리스트 -->
         <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:12px; padding:20px;">
           <h5 style="font-size:15px; font-weight:800; color:#f59e0b; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
@@ -410,10 +446,10 @@
         </div>
       </div>
 
-      <!-- 02. 디지털 하이킹 -->
+      <!-- 02. 달려봐 영주 -->
       <div id="game-tab-content-2" class="game-tab-content" style="display:none;">
         <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
-          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">02. 달려봐 영주! (디지털 하이킹 체험)</h4>
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">02. 달려봐 영주</h4>
           <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
             스테퍼 또는 트레드밀 위를 직접 걸으며 화면 속 영주시 주요 관광 코스를 탐방하는 몰입형 디지털 하이킹 체험입니다.
           </p>
@@ -449,12 +485,18 @@
             </ul>
           </div>
         </div>
+
+        <div class="detail-image-grid" aria-label="달려봐 영주 상세 이미지" style="margin-top:24px;">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784894790820_29f14f1d75eb468a.png" alt="달려봐 영주 상세 이미지 1" loading="lazy">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784894806819_3b20643aa340ade8.jpg" alt="달려봐 영주 상세 이미지 2" loading="lazy">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784894828427_d089325cd8bca0fd.jpg" alt="달려봐 영주 상세 이미지 3" loading="lazy">
+        </div>
       </div>
 
-      <!-- 03. 풍선 터뜨리기 -->
+      <!-- 03. 진격의 발다닥 -->
       <div id="game-tab-content-3" class="game-tab-content" style="display:none;">
         <div style="background:rgba(34,211,238,0.06); border-left:4px solid var(--cyan); padding:18px 20px; border-radius:0 12px 12px 0; margin-bottom:24px;">
-          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">03. 진격의 발바닥 (인터랙티브 풍선 터뜨리기)</h4>
+          <h4 style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;">03. 진격의 발다닥</h4>
           <p style="color:var(--txt); font-size:14px; line-height:1.6; word-break:keep-all;">
             참가자의 발걸음에 반응하는 바닥 인터랙션 기술을 활용해 화면 속 풍선을 밟아 터뜨리며 점수를 획득하는 체험입니다.
           </p>
@@ -489,6 +531,11 @@
               <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>점수 경쟁을 통한 게임형 체험 운영</span></li>
             </ul>
           </div>
+        </div>
+
+        <div class="detail-image-grid two" aria-label="진격의 발다닥 상세 이미지" style="margin-top:24px;">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784894225188_72125b052a43ece4.jpg" alt="진격의 발다닥 상세 이미지 1" loading="lazy">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784894185316_2cd3e63c8ba58969.jpg" alt="진격의 발다닥 상세 이미지 2" loading="lazy">
         </div>
       </div>
 
@@ -530,6 +577,10 @@
               <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>장애물 통과 및 착륙 등 단계별 미션 운영</span></li>
             </ul>
           </div>
+        </div>
+
+        <div class="detail-image-single">
+          <img src="https://clan.maumena.co.kr/uploads/resources/1784682005780_baba4d8ef55a29dc.jpg" alt="드론 체험 상세 이미지" loading="lazy">
         </div>
       </div>
     </div>
@@ -586,6 +637,10 @@
           <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>장애물 통과 및 착륙 등 단계별 미션 운영</span></li>
         </ul>
       </div>
+
+      <div class="detail-image-single">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784682005780_baba4d8ef55a29dc.jpg" alt="드론 체험존 안내 이미지" loading="lazy">
+      </div>
     </div>
 
     <!-- 티셔츠 만들기 상세 정보 (클릭 시 노출) -->
@@ -629,6 +684,12 @@
             <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>완성된 티셔츠를 참가자에게 기념품으로 제공</span></li>
           </ul>
         </div>
+      </div>
+
+      <div class="detail-image-grid" aria-label="티셔츠 만들기 안내 이미지">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784892187493_1c27f1116cc5b69c.jpg" alt="티셔츠 만들기 안내 이미지 1" loading="lazy">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784892225908_c2f47618ca6d3d86.jpg" alt="티셔츠 만들기 안내 이미지 2" loading="lazy">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784892248908_00e1fe0d22ffa539.jpg" alt="티셔츠 만들기 안내 이미지 3" loading="lazy">
       </div>
     </div>
 
@@ -739,6 +800,73 @@
             <li style="display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--cyan); font-weight:bold;">•</span> <span>당첨 결과에 따라 현장에서 경품 지급 안내</span></li>
           </ul>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 오시는 길 / 주차안내 -->
+<section class="sec" id="visit-guide" style="background:var(--bg2);">
+  <div class="wrap">
+    <div class="sec-h">
+      <div class="lab">VISIT GUIDE</div>
+      <h2>행사장 이용 안내</h2>
+      <p>오시는 길과 행사장 주차 정보를 확인해 주세요.</p>
+    </div>
+
+    <div class="visit-tabs" role="tablist" aria-label="행사장 이용 안내">
+      <button type="button" class="visit-tab active" id="visit-tab-directions" role="tab" aria-selected="true" aria-controls="visit-directions" onclick="switchVisitTab('directions')">오시는 길</button>
+      <button type="button" class="visit-tab" id="visit-tab-parking" role="tab" aria-selected="false" aria-controls="visit-parking" onclick="switchVisitTab('parking')">주차안내</button>
+    </div>
+
+    <div class="visit-panel" id="visit-directions" role="tabpanel" aria-labelledby="visit-tab-directions">
+      <h3>오시는 길</h3>
+      <div class="visit-summary">
+        <b>목적지:</b> 영주국민체육센터 <span style="color:var(--mut);">(출발지: 영주역)</span>
+      </div>
+      <div class="visit-info-grid" aria-label="교통수단별 소요 시간">
+        <div class="visit-info-card"><b>자동차</b><span>7분</span></div>
+        <div class="visit-info-card"><b>버스</b><span>약 20분</span></div>
+        <div class="visit-info-card"><b>도보</b><span>약 30분</span></div>
+      </div>
+      <div class="visit-map">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784895442405_56a644675c7db351.png" alt="영주역에서 영주국민체육센터까지의 이동 경로 안내 지도" loading="lazy">
+      </div>
+    </div>
+
+    <div class="visit-panel" id="visit-parking" role="tabpanel" aria-labelledby="visit-tab-parking" hidden>
+      <h3>주차안내</h3>
+      <div class="parking-notice">
+        행사장 방문 시 행사장 주차 가능 구역 또는 임시주차장(문정둔치)을 이용해 주세요.<br>
+        행사 기간 중 행사장 주변 일부 구간은 차량 통제가 진행될 수 있으므로, 방문 전 주차 위치와 진입로를 미리 확인해 주시기 바랍니다.
+      </div>
+      <div class="visit-copy">
+        <div>
+          <h4>이용 가능 주차 구역</h4>
+          <ul>
+            <li>행사장 주차 가능 구역</li>
+            <li>임시주차장(문정둔치)</li>
+          </ul>
+        </div>
+        <div>
+          <h4>진입 안내</h4>
+          <ul>
+            <li>2개 주요 진입로를 통해 행사장으로 진입 가능합니다.</li>
+            <li>임시주차장 이용 시 행사장까지 도보 이동이 가능합니다.</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;padding:18px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:10px;">
+        <h4 style="color:var(--cyan);font-size:14px;margin-bottom:9px;">주차 이용 안내</h4>
+        <ul style="padding-left:19px;color:var(--txt);font-size:13.5px;line-height:1.8;">
+          <li><b>통제일시:</b> 2026. 7. 26.(일) 22:00 ~ 8. 3.(월) 18:00</li>
+          <li>2026. 7. 26.(일)부터 문정둔치 임시주차장 사용이 가능합니다.</li>
+          <li>행사 당일 현장 상황에 따라 일부 구간의 차량 이동 및 주차가 제한될 수 있습니다.</li>
+          <li>주차요원 및 현장 안내 표지판의 안내에 따라 안전하게 이동해 주세요.</li>
+        </ul>
+      </div>
+      <div class="visit-map">
+        <img src="https://clan.maumena.co.kr/uploads/resources/1784895337497_6884e96f275f15ad.png" alt="행사장 주차 가능 구역과 임시주차장 안내 지도" loading="lazy">
       </div>
     </div>
   </div>
@@ -1114,6 +1242,22 @@ function switchGameTab(tabIndex) {
       content.style.display = 'none';
     }
   });
+}
+
+// 오시는 길 / 주차안내 탭 전환
+function switchVisitTab(tabName) {
+  const isDirections = tabName === 'directions';
+  const directionsTab = document.getElementById('visit-tab-directions');
+  const parkingTab = document.getElementById('visit-tab-parking');
+  const directionsPanel = document.getElementById('visit-directions');
+  const parkingPanel = document.getElementById('visit-parking');
+
+  directionsTab.classList.toggle('active', isDirections);
+  parkingTab.classList.toggle('active', !isDirections);
+  directionsTab.setAttribute('aria-selected', String(isDirections));
+  parkingTab.setAttribute('aria-selected', String(!isDirections));
+  directionsPanel.hidden = !isDirections;
+  parkingPanel.hidden = isDirections;
 }
 
 // 동영상
