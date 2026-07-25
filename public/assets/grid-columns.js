@@ -174,8 +174,8 @@
     panel.innerHTML =
       '<div class="gc-modal" style="background:#fff;border-radius:14px;width:360px;max-width:calc(100vw - 32px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4);">' +
         // 헤더 (고정)
-        '<div style="position:relative;flex:none;display:flex;align-items:center;justify-content:center;min-height:30px;padding:14px 54px;border-bottom:1px solid #e2e8f0;">' +
-          '<div style="width:100%;text-align:center;font-weight:800;font-size:15px;color:#2563eb;">컬럼 조정</div>' +
+        '<div style="position:relative;flex:none;display:flex;align-items:center;justify-content:center;min-height:30px;padding:14px 54px;border-bottom:1px solid #1d4ed8;background:#2563eb;">' +
+          '<div style="width:100%;text-align:center;font-weight:800;font-size:15px;color:#000;">컬럼 조정</div>' +
           '<button type="button" id="gc-x" aria-label="닫기" style="position:absolute;right:18px;top:14px;width:30px;height:30px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:18px;line-height:1;cursor:pointer;">&times;</button>' +
         '</div>' +
         // 본문 (세로 스크롤)
