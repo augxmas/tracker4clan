@@ -2646,6 +2646,29 @@
           </div>
         </div>
 
+        <!-- 경품 당첨 현황 -->
+        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:18px; margin-bottom:20px;">
+          <h4 style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+            📊 경품 당첨 현황
+          </h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:stretch;">
+            <div style="background:linear-gradient(135deg,#eff6ff,#f8fafc);border:1px solid #bfdbfe;border-radius:10px;padding:16px;">
+              <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:8px;">전체 당첨 현황</div>
+              <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px;">
+                <strong id="prize-winning-overall-count" style="font-size:25px;color:#1d4ed8;">0 / 0개</strong>
+                <span id="prize-winning-overall-rate" style="font-size:13px;font-weight:800;color:#7c3aed;">0%</span>
+              </div>
+              <div style="height:16px;background:#dbeafe;border-radius:999px;overflow:hidden;">
+                <div id="prize-winning-overall-bar" style="height:100%;width:0;background:linear-gradient(90deg,#2563eb,#7c3aed);border-radius:999px;transition:width .45s ease;"></div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:#64748b;">전체 경품 수량 중 당첨 완료된 수량입니다.</div>
+            </div>
+            <div id="prize-winning-rank-bars" style="display:flex;flex-direction:column;gap:11px;justify-content:center;">
+              <div style="padding:24px;text-align:center;color:#94a3b8;font-size:12px;">등록된 경품이 없습니다.</div>
+            </div>
+          </div>
+        </div>
+
         <!-- 경품 등록/수정 영역 -->
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:20px;">
           <h4 id="prize-form-title" style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">🎁 경품 등록 / 수정</h4>
@@ -14238,6 +14261,67 @@ async function savePrize() {
   }
 }
 
+function renderPrizeWinningStatus(prizes) {
+  const list = Array.isArray(prizes) ? prizes : [];
+  const totalCount = list.reduce((sum, prize) => sum + Math.max(0, Number(prize.winner_count || 0)), 0);
+  const claimedCount = list.reduce((sum, prize) => sum + Math.max(0, Number(prize.claimed_count || 0)), 0);
+  const overallRate = totalCount > 0 ? (claimedCount / totalCount) * 100 : 0;
+  const formatRate = rate => Number.isInteger(rate)
+    ? rate.toLocaleString('ko-KR')
+    : rate.toLocaleString('ko-KR', { minimumFractionDigits:1, maximumFractionDigits:1 });
+
+  document.getElementById('prize-winning-overall-count').textContent =
+    `${claimedCount.toLocaleString('ko-KR')} / ${totalCount.toLocaleString('ko-KR')}개`;
+  document.getElementById('prize-winning-overall-rate').textContent = `${formatRate(overallRate)}%`;
+  document.getElementById('prize-winning-overall-bar').style.width =
+    `${Math.min(100, Math.max(0, overallRate))}%`;
+
+  const rankMap = new Map();
+  list.forEach(prize => {
+    const ranking = Number(prize.ranking || 1);
+    const rankName = String(prize.rank_name || `${ranking}등`);
+    const key = String(ranking);
+    if (!rankMap.has(key)) rankMap.set(key, { ranking, rankName, total:0, claimed:0 });
+    const rank = rankMap.get(key);
+    rank.total += Math.max(0, Number(prize.winner_count || 0));
+    rank.claimed += Math.max(0, Number(prize.claimed_count || 0));
+  });
+
+  const ranks = Array.from(rankMap.values()).sort((a, b) =>
+    a.ranking - b.ranking || a.rankName.localeCompare(b.rankName, 'ko')
+  );
+  const bars = document.getElementById('prize-winning-rank-bars');
+  if (!ranks.length) {
+    bars.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:12px;">등록된 경품이 없습니다.</div>';
+    return;
+  }
+
+  bars.innerHTML = ranks.map((rank, index) => {
+    const rate = rank.total > 0 ? (rank.claimed / rank.total) * 100 : 0;
+    const barRate = Math.min(100, Math.max(0, rate));
+    const colors = [
+      ['#f59e0b','#f97316'],
+      ['#3b82f6','#6366f1'],
+      ['#10b981','#059669'],
+      ['#8b5cf6','#a855f7'],
+      ['#ec4899','#f43f5e']
+    ][index % 5];
+    return `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:5px;font-size:12px;">
+          <span style="font-weight:800;color:#334155;">${esc(rank.rankName)}</span>
+          <span style="color:#64748b;white-space:nowrap;">
+            <b style="color:#1e293b;">${rank.claimed.toLocaleString('ko-KR')} / ${rank.total.toLocaleString('ko-KR')}개</b>
+            · ${formatRate(rate)}%
+          </span>
+        </div>
+        <div style="height:13px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:${barRate}%;background:linear-gradient(90deg,${colors[0]},${colors[1]});border-radius:999px;transition:width .45s ease;"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 async function loadPrizeList() {
   const pid = document.getElementById('prize-project').value;
   if (!pid) return;
@@ -14273,6 +14357,7 @@ async function loadPrizeList() {
 
     const list = d.prizes || [];
     loadedPrizesCache = list;
+    renderPrizeWinningStatus(list);
     const totalPrizeCount = list.reduce(
       (sum, prize) => sum + Math.max(1, Number(prize.winner_count || 1)),
       0
