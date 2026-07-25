@@ -221,6 +221,25 @@
     .pc-arrow:disabled { opacity:.35; cursor:default; }
     .pc-counter { flex:1; text-align:center; color:#475569; font-size:13px; font-weight:700; }
     .pc-empty { min-width:100%; padding:45px 22px; text-align:center; color:#64748b; line-height:1.7; }
+
+    /* 즉석 경품 추첨 */
+    #prize-draw-modal { position:fixed; inset:0; z-index:2200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(15,23,42,.82); }
+    .prize-draw-box { width:100%; max-width:390px; min-height:430px; padding:24px 20px; border-radius:22px; background:linear-gradient(160deg,#eff6ff,#fff 52%,#fef3c7); box-shadow:0 24px 70px rgba(0,0,0,.42); text-align:center; }
+    .prize-draw-title { color:#1e3a8a; font-size:20px; font-weight:900; margin-bottom:8px; }
+    .prize-draw-sub { min-height:38px; color:#64748b; font-size:13px; line-height:1.55; margin-bottom:18px; }
+    .prize-card-stage { height:300px; display:flex; align-items:center; justify-content:center; perspective:1000px; }
+    .prize-poca-card { width:190px; height:270px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:18px; background:#fff; color:#050505; font-size:112px; font-weight:1000; box-shadow:0 18px 36px rgba(15,23,42,.24); transform-style:preserve-3d; }
+    .prize-poca-card.spinning { animation:prize-card-spin .72s linear infinite; }
+    @keyframes prize-card-spin {
+      0% { transform:rotateY(0deg) rotateZ(-2deg); }
+      50% { transform:rotateY(180deg) rotateZ(2deg) scale(1.04); }
+      100% { transform:rotateY(360deg) rotateZ(-2deg); }
+    }
+    .prize-result-image { width:100%; height:100%; object-fit:contain; border-radius:16px; }
+    .prize-result-fail { padding:22px; color:#334155; font-size:18px; font-weight:850; line-height:1.55; }
+    .prize-result-name { color:#1e293b; font-size:18px; font-weight:900; margin:14px 0 4px; }
+    .prize-result-rank { color:#b45309; font-size:14px; font-weight:800; }
+    .prize-result-close { width:100%; margin-top:18px; padding:13px; border:0; border-radius:11px; background:#1d4ed8; color:#fff; font-size:15px; font-weight:800; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -431,6 +450,18 @@
         <div id="prize-counter" class="pc-counter"></div>
         <button id="prize-next" class="pc-arrow" type="button" aria-label="다음 경품" onclick="movePrizeCatalog(1)">›</button>
       </div>
+    </div>
+  </div>
+
+  <div id="prize-draw-modal" role="dialog" aria-modal="true" aria-labelledby="prize-draw-title">
+    <div class="prize-draw-box">
+      <div class="prize-draw-title" id="prize-draw-title">즉석 경품 추첨</div>
+      <div class="prize-draw-sub" id="prize-draw-sub">행운의 카드를 확인하고 있습니다.</div>
+      <div class="prize-card-stage">
+        <div class="prize-poca-card spinning" id="prize-poca-card">?</div>
+      </div>
+      <div id="prize-result-meta"></div>
+      <button class="prize-result-close" id="prize-result-close" type="button" onclick="closePrizeDrawResult()" style="display:none;">확인</button>
     </div>
   </div>
 
@@ -1323,42 +1354,171 @@
       }
     }
 
-    async function drawVisitorPrize() {
-      const btn = $('btn-draw-prize');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerText = '🔄 행운의 주사위 굴리는 중...';
-        btn.style.background = '#93c5fd';
+    const PRIZE_DRAW_SOUND_URL = 'https://clan.ngrok.dev/uploads/resources/1784938995671_a46dc6838add4932.mp3';
+    let prizeDrawInProgress = false;
+    let prizeDrawResult = null;
+    let prizeAudioContext = null;
+
+    function preparePrizeAudioContext() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!prizeAudioContext) prizeAudioContext = new AudioCtx();
+        if (prizeAudioContext.state === 'suspended') prizeAudioContext.resume().catch(() => {});
+        return prizeAudioContext;
+      } catch (e) {
+        return null;
       }
+    }
+
+    function playPrizeTone(kind) {
+      const ctx = preparePrizeAudioContext();
+      if (!ctx) return;
+      const start = ctx.currentTime + .03;
+      const notes = kind === 'win'
+        ? [[523.25,0,.16],[659.25,.14,.16],[783.99,.28,.18],[1046.5,.44,.42]]
+        : [[330,0,.2],[247,.18,.22],[165,.38,.52]];
+      notes.forEach(([frequency, offset, duration], index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = kind === 'win' ? (index === notes.length - 1 ? 'triangle' : 'sine') : 'sawtooth';
+        osc.frequency.setValueAtTime(frequency, start + offset);
+        if (kind === 'lose') {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(90, frequency * .72), start + offset + duration);
+        }
+        gain.gain.setValueAtTime(.0001, start + offset);
+        gain.gain.exponentialRampToValueAtTime(kind === 'win' ? .2 : .12, start + offset + .025);
+        gain.gain.exponentialRampToValueAtTime(.0001, start + offset + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start + offset);
+        osc.stop(start + offset + duration + .03);
+      });
+    }
+
+    function openPrizeDrawAnimation() {
+      prizeDrawResult = null;
+      const card = $('prize-poca-card');
+      $('prize-draw-title').textContent = '즉석 경품 추첨';
+      $('prize-draw-sub').textContent = '행운의 카드를 확인하고 있습니다.';
+      $('prize-result-meta').innerHTML = '';
+      $('prize-result-close').style.display = 'none';
+      card.className = 'prize-poca-card spinning';
+      card.textContent = '?';
+      $('prize-draw-modal').style.display = 'flex';
+    }
+
+    function playPrizeDrawSoundOnce() {
+      return new Promise(resolve => {
+        const audio = new Audio(PRIZE_DRAW_SOUND_URL);
+        let finished = false;
+        let fallbackTimer = null;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+          audio.pause();
+          audio.removeAttribute('src');
+          resolve();
+        };
+        audio.preload = 'auto';
+        audio.loop = false;
+        audio.addEventListener('ended', finish, { once:true });
+        audio.addEventListener('error', () => {
+          fallbackTimer = setTimeout(finish, 2500);
+        }, { once:true });
+        const play = audio.play();
+        if (play && typeof play.catch === 'function') {
+          play.catch(() => { fallbackTimer = setTimeout(finish, 2500); });
+        }
+      });
+    }
+
+    function showPrizeDrawResult(result) {
+      prizeDrawResult = result;
+      const card = $('prize-poca-card');
+      const meta = $('prize-result-meta');
+      card.className = 'prize-poca-card';
+
+      if (result.win && result.prize) {
+        playPrizeTone('win');
+        $('prize-draw-title').textContent = '🎉 축하합니다!';
+        $('prize-draw-sub').textContent = '경품에 당첨되었습니다.';
+        card.innerHTML = result.prize.image_path
+          ? `<img class="prize-result-image" src="${esc(result.prize.image_path)}" alt="${esc(result.prize.prize_name || '당첨 경품')}">`
+          : '🎁';
+        meta.innerHTML = `
+          <div class="prize-result-name">${esc(result.prize.prize_name || '경품')}</div>
+          <div class="prize-result-rank">${esc(result.prize.rank_name || '')}</div>`;
+      } else {
+        playPrizeTone('lose');
+        $('prize-draw-title').textContent = '추첨 결과';
+        $('prize-draw-sub').textContent = '';
+        card.innerHTML = '<div class="prize-result-fail">참여해 주셔서<br>감사합니다</div>';
+        meta.innerHTML = '';
+      }
+      $('prize-result-close').style.display = 'block';
+    }
+
+    async function closePrizeDrawResult() {
+      $('prize-draw-modal').style.display = 'none';
+      const won = !!(prizeDrawResult && prizeDrawResult.win && prizeDrawResult.prize);
+      prizeDrawResult = null;
+      prizeDrawInProgress = false;
+      await loadAndRenderVisitorPrize();
+      if (won) {
+        await uiAlert('QR코드를 보여주시고 경품을 수령하세요', { icon: '🎁' });
+      }
+    }
+
+    async function drawVisitorPrize() {
+      if (prizeDrawInProgress) return;
+      const confirmed = await uiConfirm('기회는 한번 뿐, 경품 추천에 도전하시겠습니까', {
+        icon: '🎁',
+        okText: '도전하기',
+        cancelText: '취소'
+      });
+      if (!confirmed) return;
+
+      prizeDrawInProgress = true;
+      preparePrizeAudioContext();
+      const btn = $('btn-draw-prize');
+      if (btn) btn.disabled = true;
+      openPrizeDrawAnimation();
 
       try {
-        const r = await fetch(`/api/visitor/projects/${projectSerial}/prize-challenge`, {
+        const drawRequest = fetch(`/api/visitor/projects/${projectSerial}/prize-challenge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
-        });
-        const d = await r.json();
-        
-        if (!r.ok || !d.ok) {
-          await uiAlert(d.message || '추첨을 진행하지 못했습니다. 잠시 후 다시 시도해주세요.');
-          loadAndRenderVisitorPrize();
+        }).then(async r => ({ r, d: await r.json() }));
+        const [, response] = await Promise.allSettled([
+          playPrizeDrawSoundOnce(),
+          drawRequest
+        ]);
+
+        if (response.status !== 'fulfilled' || !response.value.r.ok || !response.value.d.ok) {
+          $('prize-draw-modal').style.display = 'none';
+          prizeDrawInProgress = false;
+          const message = response.status === 'fulfilled'
+            ? response.value.d.message
+            : '추첨 도중 오류가 발생했습니다.';
+          await uiAlert(message || '추첨을 진행하지 못했습니다. 잠시 후 다시 시도해주세요.');
+          await loadAndRenderVisitorPrize();
           return;
         }
 
-        if (d.win && d.prize) {
-          await uiAlert(`🎉 축하합니다!!! [${d.prize.rank_name}] ${d.prize.prize_name}에 당첨되셨습니다!`, { icon: '🏆' });
-        } else {
-          await uiAlert('😢 아쉽지만 꽝입니다! 투어에 참여해주셔서 감사합니다.', { icon: '🍀' });
-        }
-
-        loadAndRenderVisitorPrize();
+        showPrizeDrawResult(response.value.d);
       } catch (err) {
         console.error(err);
+        $('prize-draw-modal').style.display = 'none';
+        prizeDrawInProgress = false;
         await uiAlert('추첨 도중 오류가 발생했습니다.');
-        loadAndRenderVisitorPrize();
+        await loadAndRenderVisitorPrize();
       }
     }
 
     window.drawVisitorPrize = drawVisitorPrize;
+    window.closePrizeDrawResult = closePrizeDrawResult;
 
     // 단계별 보상 list (단계가 2개 이상일 때만)
     function renderTierList(tiers) {
