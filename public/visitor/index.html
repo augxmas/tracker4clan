@@ -1355,6 +1355,7 @@
     }
 
     const PRIZE_DRAW_SOUND_URL = 'https://clan.ngrok.dev/uploads/resources/1784938995671_a46dc6838add4932.mp3';
+    const PRIZE_LOSE_IMAGE_URL = 'https://clan.ngrok.dev/uploads/resources/1784941889639_40da5e5f32b031ba.png';
     let prizeDrawInProgress = false;
     let prizeDrawResult = null;
     let prizeAudioContext = null;
@@ -1454,7 +1455,7 @@
         playPrizeTone('lose');
         $('prize-draw-title').textContent = '추첨 결과';
         $('prize-draw-sub').textContent = '';
-        card.innerHTML = '<img class="prize-result-image" src="/assets/prize/lose-result.png" alt="꽝">';
+        card.innerHTML = `<img class="prize-result-image" src="${PRIZE_LOSE_IMAGE_URL}" alt="꽝">`;
         meta.innerHTML = '<div class="prize-result-fail">참여해 주셔서 감사합니다</div>';
       }
       $('prize-result-close').style.display = 'block';
