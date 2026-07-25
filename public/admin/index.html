@@ -13688,11 +13688,15 @@ function onResourceProjectChange() {
 function onResourceFileChanged() {
   const fileInp = document.getElementById('res-file');
   const lbl = document.getElementById('res-file-lbl');
+  const msg = document.getElementById('res-msg');
   const file = fileInp.files[0];
   if (file) {
     lbl.innerHTML = `<span style="color:#2563eb; font-weight:700;">📄 ${esc(file.name)}</span> (${formatBytes(file.size)})`;
+    msg.style.color = '#dc2626';
+    msg.textContent = validateResourceUploadFile(file);
   } else {
     lbl.innerHTML = '클릭하거나 파일을 끌어다 놓으세요';
+    msg.textContent = '';
   }
 }
 
@@ -13968,11 +13972,15 @@ function closeResourceEditModal() {
 function onEditResourceFileChanged() {
   const fileInp = document.getElementById('edit-res-file');
   const lbl = document.getElementById('edit-res-file-lbl');
+  const msg = document.getElementById('edit-res-msg');
   const file = fileInp.files[0];
   if (file) {
     lbl.innerHTML = `<span style="color:#2563eb; font-weight:700;">📄 ${esc(file.name)}</span> (${formatBytes(file.size)})`;
+    msg.style.color = '#dc2626';
+    msg.textContent = validateResourceUploadFile(file);
   } else {
     lbl.innerHTML = '클릭하거나 새 파일을 끌어다 놓으세요';
+    msg.textContent = '';
   }
 }
 
