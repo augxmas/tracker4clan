@@ -1,5 +1,5 @@
 // 모노라마 관리자 모바일 PWA — 최소 SW (네트워크 우선 + offline fallback)
-const CACHE = 'mn-admin-m-v1';
+const CACHE = 'mn-admin-m-v2';
 const PRECACHE = ['/admin/m', '/favicon-blue.svg', '/vendor/jsQR.js'];
 
 self.addEventListener('install', (event) => {

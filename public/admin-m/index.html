@@ -134,6 +134,9 @@
     <div id="pane-reward" class="pane active">
       <div class="card">
         <h3>🎁 경품 수령 확인</h3>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#1e40af;text-align:center;">
+          즉석 경품 당첨자의 QR을 인식하면 수령 완료로 자동 처리됩니다.
+        </div>
         <div id="rw-need-proj" style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#92400e;text-align:center;">
           ⚠ 상단에서 <b>프로젝트를 먼저 선택</b>하면 카메라 스캔이 활성화됩니다.
         </div>
@@ -670,6 +673,18 @@ async function rwLookup(token) {
     const instantResponse = await fetch(`/api/host/projects/${currentProjectId}/prize-receipt/lookup/${encodeURIComponent(token)}`, { cache:'no-store' });
     const instantData = await instantResponse.json();
     if (instantResponse.ok && instantData.ok) {
+      if (!instantData.already_received) {
+        const completed = await rwCompleteInstantPrize(token);
+        if (!completed.ok) {
+          document.getElementById('rw-result').innerHTML =
+            `<div class="empty" style="color:#dc2626;">⚠ ${esc(completed.message || '경품 수령 처리 실패')}</div>`;
+          rwBusy = false;
+          rwStop();
+          return;
+        }
+        instantData.already_received = true;
+        instantData.received_at = completed.received_at;
+      }
       rwRenderInstantPrize(token, instantData);
       rwStop();
       return;
@@ -690,6 +705,21 @@ async function rwLookup(token) {
     }
     rwRender(token, d); rwStop();
   } catch (e) { rwBusy = false; }
+}
+async function rwCompleteInstantPrize(identifier) {
+  try {
+    const response = await fetch(`/api/host/projects/${currentProjectId}/prize-receipt/redeem`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ identifier })
+    });
+    const data = await response.json();
+    if (response.ok && data.ok) return { ok:true, received_at:data.received_at };
+    if (data.error === 'already_received') return { ok:true, received_at:data.received_at };
+    return { ok:false, message:data.message };
+  } catch (e) {
+    return { ok:false, message:'네트워크 오류로 경품 수령을 처리하지 못했습니다.' };
+  }
 }
 function rwRenderInstantPrize(identifier, d) {
   const prize = d.prize || {};
@@ -721,22 +751,9 @@ function rwRenderInstantPrize(identifier, d) {
   document.getElementById('rw-result').innerHTML = html;
 }
 async function rwRedeemInstantPrize(identifier) {
-  try {
-    const r = await fetch(`/api/host/projects/${currentProjectId}/prize-receipt/redeem`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ identifier })
-    });
-    const d = await r.json();
-    if (!r.ok || !d.ok) {
-      alert(d.message || '경품 수령 처리에 실패했습니다.');
-      if (d.error === 'already_received') rwLookup(identifier);
-      return;
-    }
-    rwLookup(identifier);
-  } catch (e) {
-    alert('네트워크 오류로 경품 수령을 처리하지 못했습니다.');
-  }
+  const completed = await rwCompleteInstantPrize(identifier);
+  if (!completed.ok) { alert(completed.message || '경품 수령 처리에 실패했습니다.'); return; }
+  rwLookup(identifier);
 }
 function rwRender(token, d) {
   const rw = d.reward || {}; const re = d.respondent || {};
