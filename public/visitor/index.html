@@ -1454,8 +1454,8 @@
         playPrizeTone('lose');
         $('prize-draw-title').textContent = '추첨 결과';
         $('prize-draw-sub').textContent = '';
-        card.innerHTML = '<div class="prize-result-fail">참여해 주셔서<br>감사합니다</div>';
-        meta.innerHTML = '';
+        card.innerHTML = '<img class="prize-result-image" src="/assets/prize/lose-result.png" alt="꽝">';
+        meta.innerHTML = '<div class="prize-result-fail">참여해 주셔서 감사합니다</div>';
       }
       $('prize-result-close').style.display = 'block';
     }
