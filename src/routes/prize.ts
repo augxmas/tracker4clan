@@ -104,7 +104,10 @@ router.get("/host/projects/:projectId/prizes", requireHost, async (req, res) => 
     const hostId = req.session.host!.id;
 
     // Verify project ownership
-    const [projRows] = await pool.execute("SELECT id FROM projects WHERE id = ? AND host_id = ?", [projectId, hostId]);
+    const [projRows] = await pool.execute(
+      "SELECT id, prize_challengers FROM projects WHERE id = ? AND host_id = ?",
+      [projectId, hostId]
+    );
     if (!Array.isArray(projRows) || projRows.length === 0) {
       res.status(404).json({ ok: false, error: "project_not_found", message: "프로젝트를 찾을 수 없습니다." });
       return;
@@ -145,11 +148,26 @@ router.post("/host/projects/:projectId/prizes", requireHost, upload.single("file
       res.status(400).json({ ok: false, error: "missing_fields", message: "등수와 상품명을 입력해주세요." });
       return;
     }
+    const nextWinnerCount = Math.max(1, Number(winner_count || 1));
+    const challengerLimit = Number((projRows as any)[0].prize_challengers || 0);
+    const [sumRows] = await pool.execute(
+      "SELECT COALESCE(SUM(winner_count), 0) AS total FROM project_prizes WHERE project_id = ?",
+      [projectId]
+    );
+    const projectedPrizeCount = Number((sumRows as any)[0].total || 0) + nextWinnerCount;
+    if (challengerLimit > 0 && challengerLimit < projectedPrizeCount) {
+      res.status(400).json({
+        ok: false,
+        error: "insufficient_challengers",
+        message: `도전인원(${challengerLimit}명)은 취득 가능한 총 경품 수량(${projectedPrizeCount}개)보다 크거나 같아야 합니다. 도전인원을 먼저 늘려주세요.`,
+      });
+      return;
+    }
 
     const [insertResult] = await pool.execute(
       `INSERT INTO project_prizes (project_id, ranking, rank_name, prize_name, winner_count, image_path)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [projectId, Number(ranking || 1), rank_name.trim(), prize_name.trim(), Number(winner_count || 1), finalImagePath]
+      [projectId, Number(ranking || 1), rank_name.trim(), prize_name.trim(), nextWinnerCount, finalImagePath]
     );
 
     res.json({ ok: true, id: (insertResult as any).insertId, image_path: finalImagePath });
@@ -166,7 +184,7 @@ router.put("/host/prizes/:id", requireHost, upload.single("file"), async (req: a
 
     // Check prize ownership
     const [rows] = await pool.execute(
-      `SELECT r.id, r.project_id FROM project_prizes r 
+      `SELECT r.id, r.project_id, r.winner_count, p.prize_challengers FROM project_prizes r
        JOIN projects p ON p.id = r.project_id 
        WHERE r.id = ? AND p.host_id = ?`,
       [prizeId, hostId]
@@ -187,9 +205,26 @@ router.put("/host/prizes/:id", requireHost, upload.single("file"), async (req: a
       res.status(400).json({ ok: false, error: "missing_fields", message: "등수와 상품명을 입력해주세요." });
       return;
     }
+    const ownedPrize = (rows as any)[0];
+    const nextWinnerCount = Math.max(1, Number(winner_count || 1));
+    const challengerLimit = Number(ownedPrize.prize_challengers || 0);
+    const [sumRows] = await pool.execute(
+      "SELECT COALESCE(SUM(winner_count), 0) AS total FROM project_prizes WHERE project_id = ?",
+      [ownedPrize.project_id]
+    );
+    const projectedPrizeCount =
+      Number((sumRows as any)[0].total || 0) - Number(ownedPrize.winner_count || 0) + nextWinnerCount;
+    if (challengerLimit > 0 && challengerLimit < projectedPrizeCount) {
+      res.status(400).json({
+        ok: false,
+        error: "insufficient_challengers",
+        message: `도전인원(${challengerLimit}명)은 취득 가능한 총 경품 수량(${projectedPrizeCount}개)보다 크거나 같아야 합니다. 도전인원을 먼저 늘려주세요.`,
+      });
+      return;
+    }
 
     let updateSql = `UPDATE project_prizes SET ranking = ?, rank_name = ?, prize_name = ?, winner_count = ?`;
-    const params = [Number(ranking || 1), rank_name.trim(), prize_name.trim(), Number(winner_count || 1)];
+    const params = [Number(ranking || 1), rank_name.trim(), prize_name.trim(), nextWinnerCount];
 
     if (finalImagePath !== undefined) {
       const dbPath = (finalImagePath === "" || finalImagePath === "null") ? null : finalImagePath;
@@ -330,6 +365,7 @@ function toUploadUrl(p?: string | null): string | null {
 // 5. Get prize project stats (현장등록인원, 경품도전가능인원, 경품도전인원 등)
 router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store");
     const projectId = Number(req.params.projectId);
     const hostId = req.session.host!.id;
 
@@ -352,9 +388,15 @@ router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res
     );
     const totalActiveLocations = Number((locRows as any)[0].total_locations || 0);
 
-    // 2) Total visitors (현장등록인원)
+    // 2) 현장등록인원
+    // visitors 는 Tour 방문 인증만 한 사용자도 포함하므로,
+    // 실제 현장등록 신청(reservations.mode='entry')을 기준으로 집계한다.
     const [visitorRows] = await pool.execute(
-      "SELECT COUNT(*) AS total_visitors FROM visitors WHERE project_id = ?",
+      `SELECT COUNT(*) AS total_visitors
+         FROM reservations
+        WHERE project_id = ?
+          AND mode = 'entry'
+          AND status NOT IN ('cancelled', 'expired')`,
       [projectId]
     );
     const totalVisitors = Number((visitorRows as any)[0].total_visitors || 0);
@@ -421,7 +463,8 @@ router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res
   }
 });
 
-// 6. Set challenger limit & Random shuffle of remaining/all prizes
+// 6. Set challenger limit & reshuffle only unclaimed prizes.
+// Existing challenge results (winners and non-winners) are never reset.
 router.post("/host/projects/:projectId/prize-shuffle", requireHost, async (req, res) => {
   try {
     const projectId = Number(req.params.projectId);
@@ -443,37 +486,45 @@ router.post("/host/projects/:projectId/prize-shuffle", requireHost, async (req, 
       return;
     }
 
-    // Check if any winners exist
-    const [winnerCountRows] = await pool.execute(
-      "SELECT COUNT(*) AS win_count FROM visitor_prize_challenges WHERE project_id = ? AND prize_id IS NOT NULL",
-      [projectId]
-    );
-    const hasWinners = Number((winnerCountRows as any)[0].win_count || 0) > 0;
-
-    if (hasWinners) {
-      res.status(400).json({ ok: false, error: "has_winners", message: "이미 당첨자가 발생하여 경품 배치를 다시 진행할 수 없습니다." });
-      return;
-    }
-
-    // Get all prizes and calculate total count
+    // Get all prizes and calculate total / already claimed / remaining counts.
     const [prizesRows] = await pool.execute(
-      "SELECT id, winner_count FROM project_prizes WHERE project_id = ?",
+      `SELECT pp.id, pp.winner_count,
+              (SELECT COUNT(*) FROM visitor_prize_challenges vpc
+                WHERE vpc.project_id = pp.project_id AND vpc.prize_id = pp.id) AS claimed_count
+         FROM project_prizes pp
+        WHERE pp.project_id = ?`,
       [projectId]
     );
     const prizes = Array.isArray(prizesRows) ? prizesRows : [];
     let totalPrizesCount = 0;
-    const prizeIdsList: number[] = [];
+    const remainingPrizeIds: number[] = [];
 
     for (const p of prizes) {
       const cnt = Number((p as any).winner_count || 1);
+      const claimed = Math.min(cnt, Number((p as any).claimed_count || 0));
       totalPrizesCount += cnt;
-      for (let i = 0; i < cnt; i++) {
-        prizeIdsList.push(Number((p as any).id));
+      for (let i = claimed; i < cnt; i++) {
+        remainingPrizeIds.push(Number((p as any).id));
       }
     }
 
     if (challengers < totalPrizesCount) {
       res.status(400).json({ ok: false, error: "insufficient_challengers", message: `도전인원(${challengers}명)은 등록된 총 경품 수(${totalPrizesCount}개)보다 크거나 같아야 합니다.` });
+      return;
+    }
+
+    const [challengeCountRows] = await pool.execute(
+      "SELECT COUNT(*) AS challenged_count FROM visitor_prize_challenges WHERE project_id = ?",
+      [projectId]
+    );
+    const challengedCount = Number((challengeCountRows as any)[0].challenged_count || 0);
+    const minimumChallengers = challengedCount + remainingPrizeIds.length;
+    if (challengers < minimumChallengers) {
+      res.status(400).json({
+        ok: false,
+        error: "insufficient_remaining_slots",
+        message: `기존 도전 결과 ${challengedCount}건을 유지하고 남은 경품 ${remainingPrizeIds.length}개를 재배치하려면 도전인원이 최소 ${minimumChallengers}명이어야 합니다.`,
+      });
       return;
     }
 
@@ -488,45 +539,41 @@ router.post("/host/projects/:projectId/prize-shuffle", requireHost, async (req, 
         [challengers, projectId]
       );
 
-      // Clear existing challenge logs (since no winners exist, resetting losers is safe)
+      // Preserve every challenged slot/result. Only future (unconfirmed) slots are rebuilt.
       await conn.execute(
-        "DELETE FROM visitor_prize_challenges WHERE project_id = ?",
-        [projectId]
+        "DELETE FROM project_prize_slots WHERE project_id = ? AND slot_index > ?",
+        [projectId, challengedCount]
       );
 
-      // Clear existing prize slot layouts
-      await conn.execute(
-        "DELETE FROM project_prize_slots WHERE project_id = ?",
-        [projectId]
-      );
-
-      // Distribute prizes across challengers randomly
+      // Distribute only remaining prizes among slots that nobody has challenged yet.
       const selectedSlots = new Set<number>();
-      while (selectedSlots.size < totalPrizesCount) {
-        // Random number from 1 to challengers (inclusive)
-        const rnd = Math.floor(Math.random() * challengers) + 1;
+      while (selectedSlots.size < remainingPrizeIds.length) {
+        const rnd = Math.floor(Math.random() * (challengers - challengedCount)) + challengedCount + 1;
         selectedSlots.add(rnd);
       }
       const selectedSlotsArr = Array.from(selectedSlots);
 
-      // Shuffle prizeIdsList to make it even more random
-      for (let i = prizeIdsList.length - 1; i > 0; i--) {
+      // Shuffle the remaining prize instances as well.
+      for (let i = remainingPrizeIds.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        const temp = prizeIdsList[i];
-        prizeIdsList[i] = prizeIdsList[j];
-        prizeIdsList[j] = temp;
+        const temp = remainingPrizeIds[i];
+        remainingPrizeIds[i] = remainingPrizeIds[j];
+        remainingPrizeIds[j] = temp;
       }
 
       // Store slots
       for (let i = 0; i < selectedSlotsArr.length; i++) {
         await conn.execute(
           "INSERT INTO project_prize_slots (project_id, slot_index, prize_id) VALUES (?, ?, ?)",
-          [projectId, selectedSlotsArr[i], prizeIdsList[i]]
+          [projectId, selectedSlotsArr[i], remainingPrizeIds[i]]
         );
       }
 
       await conn.commit();
-      res.json({ ok: true, message: `도전인원 ${challengers}명 내에서 ${totalPrizesCount}개의 경품이 무작위로 배치되었습니다!` });
+      res.json({
+        ok: true,
+        message: `기존 도전 결과 ${challengedCount}건을 유지하고, 미확정 경품 ${remainingPrizeIds.length}개를 도전인원 ${challengers}명 범위에 재배치했습니다.`,
+      });
     } catch (txErr: any) {
       await conn.rollback();
       throw txErr;

@@ -279,6 +279,16 @@ function refreshPwaBox() {
 
 // ── 이메일 저장 (localStorage) ──
 const REMEMBER_KEY = 'tracker_host_remembered_email';
+const HOST_SESSION_KEY = 'tracker_host_mobile_session';
+let hostSessionId = '';
+try { hostSessionId = sessionStorage.getItem(HOST_SESSION_KEY) || ''; } catch (e) {}
+
+function hostFetch(url, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (hostSessionId) headers.set('X-Session-Id', hostSessionId);
+  return fetch(url, { ...options, headers, credentials: 'same-origin' });
+}
+
 function loadRememberedEmail() {
   try {
     const saved = localStorage.getItem(REMEMBER_KEY);
@@ -292,7 +302,7 @@ function loadRememberedEmail() {
 // ── 인증 ──
 async function init() {
   try {
-    const r = await fetch('/api/host/me');
+    const r = await hostFetch('/api/host/me', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
       enterMain(d.host || {});
@@ -331,7 +341,9 @@ async function doLogin() {
   err.classList.remove('show'); err.textContent = '';
   if (!email || !pw) { err.classList.add('show'); err.textContent = '이메일·비밀번호를 입력해 주세요.'; return; }
   try {
-    const r = await fetch('/api/host/login', { method: 'POST', headers: {'Content-Type':'application/json'},
+    hostSessionId = '';
+    try { sessionStorage.removeItem(HOST_SESSION_KEY); } catch (e) {}
+    const r = await hostFetch('/api/host/login', { method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ host_email: email, password: pw }) });
     const d = await r.json();
     if (!r.ok) { err.classList.add('show'); err.textContent = d.error || '로그인에 실패했습니다.'; return; }
@@ -340,11 +352,17 @@ async function doLogin() {
       if (remember) localStorage.setItem(REMEMBER_KEY, email);
       else localStorage.removeItem(REMEMBER_KEY);
     } catch (e) {}
+    if (d.sessionId) {
+      hostSessionId = d.sessionId;
+      try { sessionStorage.setItem(HOST_SESSION_KEY, hostSessionId); } catch (e) {}
+    }
     enterMain(d.host || {});
   } catch (e) { err.classList.add('show'); err.textContent = '네트워크 오류'; }
 }
 async function doLogout() {
-  try { await fetch('/api/host/logout', { method: 'POST' }); } catch (e) {}
+  try { await hostFetch('/api/host/logout', { method: 'POST' }); } catch (e) {}
+  hostSessionId = '';
+  try { sessionStorage.removeItem(HOST_SESSION_KEY); } catch (e) {}
   rwStop();
   location.reload();
 }
@@ -352,14 +370,38 @@ async function doLogout() {
 // ── 프로젝트 로드 ──
 let projects = [], currentProjectId = '';
 async function loadProjects() {
+  const sel = document.getElementById('proj-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— 프로젝트 불러오는 중 —</option>';
+  sel.disabled = true;
   try {
-    const r = await fetch('/api/host/projects?page=1&pageSize=100');
-    const d = await r.json();
-    projects = (d.data || []).filter(p => p.status !== 'cancelled' && p.status !== 'draft');
-    const sel = document.getElementById('proj-sel');
+    const r = await hostFetch('/api/host/projects?page=1&size=100', { cache: 'no-store' });
+    const contentType = r.headers.get('content-type') || '';
+    const d = contentType.includes('application/json') ? await r.json() : {};
+    if (r.status === 401 || r.status === 440) {
+      hostSessionId = '';
+      try { sessionStorage.removeItem(HOST_SESSION_KEY); } catch (e) {}
+      showLogin();
+      throw new Error('로그인 세션이 만료되었습니다.');
+    }
+    if (!r.ok) throw new Error(d.error || d.message || `프로젝트 조회 실패 (HTTP ${r.status})`);
+    // 등록된 프로젝트는 상태와 관계없이 모두 표시한다.
+    projects = Array.isArray(d.data) ? d.data : [];
     sel.innerHTML = '<option value="">— 프로젝트 선택 —</option>' +
-      projects.map(p => `<option value="${p.id}">[${esc(p.project_serial)}] ${esc(p.project_name)}</option>`).join('');
-  } catch (e) { console.warn(e); }
+      projects.map(p => {
+        const statusLabel = p.status === 'draft' ? ' · 초안' : (p.status === 'cancelled' ? ' · 취소' : '');
+        return `<option value="${p.id}">[${esc(p.project_serial)}] ${esc(p.project_name)}${statusLabel}</option>`;
+      }).join('');
+    if (!projects.length) {
+      sel.innerHTML = '<option value="">— 등록된 프로젝트가 없습니다 —</option>';
+    }
+  } catch (e) {
+    console.warn('[loadProjects]', e);
+    projects = [];
+    sel.innerHTML = '<option value="">— 프로젝트 조회 실패 · 새로고침해 주세요 —</option>';
+  } finally {
+    sel.disabled = false;
+  }
   applyRewardScanState();
 }
 function onProjChange() {
@@ -411,7 +453,12 @@ function openTourScanner() {
   }
   const serial = selProj.project_serial || '';
   const name = selProj.project_name || '';
-  window.open(`/admin/qr-scanner.html?id=${currentProjectId}&serial=${encodeURIComponent(serial)}&name=${encodeURIComponent(name)}`, '_blank');
+  const scannerUrl = new URL('/admin/qr-scanner.html', window.location.origin);
+  scannerUrl.searchParams.set('id', currentProjectId);
+  scannerUrl.searchParams.set('serial', serial);
+  scannerUrl.searchParams.set('name', name);
+  if (hostSessionId) scannerUrl.searchParams.set('_session_id', hostSessionId);
+  window.open(scannerUrl.toString(), '_blank');
 }
 
 // ════════════════════════════════════════════

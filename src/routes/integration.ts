@@ -251,14 +251,17 @@ router.post("/projects/:serial/reservations/lookup", async (req, res) => {
   const r = rows[0] as any;
   let fields: any = {};
   try { fields = r.fields_json ? JSON.parse(r.fields_json) : {}; } catch {}
-  const base = publicBaseUrl();
+  const visitorUrl = `/v/${serial}?resv=${encodeURIComponent(String(r.token))}`;
   res.json({
     ok: true, found: true,
     reservation: {
       mode: r.mode, status: r.status, fields,
       amount: Number(r.amount || 0),
       qr_image_url: toUrl(r.qr_image_path),
-      visitor_url: `${base}/v/${serial}?resv=${r.token}`,
+      // Browser navigation must follow the origin that served this API.
+      // Using publicBaseUrl() here can send production visitors to a
+      // development BASE_URL (for example localhost).
+      visitor_url: visitorUrl,
       created_at: r.created_at,
       activated_at: r.activated_at,
       used_at: r.used_at,
@@ -276,6 +279,8 @@ router.post("/projects/:serial/reservations/submit", async (req, res) => {
   const mode = body.mode === "entry" ? "entry" : "reservation";
   const fields = (body.fields && typeof body.fields === "object") ? body.fields : {};
   const emailVerified = !!body.email_verified;
+  const termsConsented = !!body.terms_consented;
+  const privacyConsented = !!body.privacy_consented;
 
   // 프로젝트 조회 + 윈도우 검증
   const [pr] = await pool.execute(
@@ -305,6 +310,11 @@ router.post("/projects/:serial/reservations/submit", async (req, res) => {
   } else {
     if (!Number(proj.entry_benefit_enabled)) { res.status(400).json({ ok: false, error: "entry_disabled" }); return; }
     if (!entryOpen) { res.status(400).json({ ok: false, error: "entry_window_closed" }); return; }
+    if (!termsConsented || !privacyConsented) {
+      res.status(400).json({ ok: false, error: "consent_required",
+        message: "이용약관 및 개인정보 수집·이용 동의가 필요합니다." });
+      return;
+    }
   }
 
   // 필수 필드 + 이메일 인증 검증
@@ -366,7 +376,8 @@ router.post("/projects/:serial/reservations/submit", async (req, res) => {
 
   // QR 생성 (가맹점이 스캔하면 사용처리, visitor 가 스캔하면 PWA 로 자동 이동)
   const base = publicBaseUrl();
-  const visitorUrl  = `${base}/v/${proj.project_serial}?resv=${token}`;
+  // This URL is consumed by the browser, so keep it origin-relative.
+  const visitorUrl  = `/v/${proj.project_serial}?resv=${encodeURIComponent(token)}`;
   const redeemUrl   = `${base}/r/${proj.project_serial}/${token}`;
   const qrFile = path.join(reservationQrDir, `${token}.png`);
   await QRCode.toFile(qrFile, redeemUrl, { margin: 2, width: 480 });

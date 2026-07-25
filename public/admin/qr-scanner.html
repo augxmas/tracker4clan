@@ -164,6 +164,22 @@
     const projectSerial = urlParams.get('serial') || '';
     const projectName = urlParams.get('name') || '';
     const agentToken = urlParams.get('agent_token') || '';
+    let hostSessionId = urlParams.get('_session_id') || '';
+    if (!hostSessionId) {
+      try { hostSessionId = sessionStorage.getItem('tracker_host_mobile_session') || ''; } catch (e) {}
+    } else {
+      try { sessionStorage.setItem('tracker_host_mobile_session', hostSessionId); } catch (e) {}
+      // 세션 값이 주소창·방문 기록·리퍼러에 남지 않도록 즉시 제거한다.
+      urlParams.delete('_session_id');
+      const cleanQuery = urlParams.toString();
+      history.replaceState(null, '', window.location.pathname + (cleanQuery ? `?${cleanQuery}` : ''));
+    }
+
+    function hostFetch(url, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (hostSessionId) headers.set('X-Session-Id', hostSessionId);
+      return fetch(url, { ...options, headers, credentials: 'same-origin' });
+    }
 
     // Set Header
     document.getElementById('header-project-name').textContent = projectName || '프로젝트 정보 없음';
@@ -186,7 +202,7 @@
 
       try {
         const url = `/api/host/projects/${projectId}/locations` + (agentToken ? `?agent_token=${encodeURIComponent(agentToken)}` : '');
-        const response = await fetch(url);
+        const response = await hostFetch(url, { cache: 'no-store' });
         const result = await response.json();
 
         if (!response.ok || !result.ok) {
@@ -299,7 +315,7 @@
 
       // Send to server
       try {
-        const response = await fetch(`/api/host/projects/${projectId}/scan-visitor`, {
+        const response = await hostFetch(`/api/host/projects/${projectId}/scan-visitor`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

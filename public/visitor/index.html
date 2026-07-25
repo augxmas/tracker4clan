@@ -198,6 +198,29 @@
                   padding: 10px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
     #scan-msg { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top) + 18px); left: 14px;
                 color: #fff; font-size: 13px; max-width: 60%; text-shadow: 0 1px 4px #000; }
+    /* 경품 확인 캐러셀 */
+    #prize-catalog-modal { position:fixed; inset:0; z-index:2100; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(15,23,42,.68); }
+    .pc-box { width:100%; max-width:400px; max-height:90vh; overflow:hidden; background:#fff; border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.32); }
+    .pc-head { padding:15px 18px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,#15803d,#16a34a); color:#fff; }
+    .pc-head h3 { margin:0; font-size:17px; }
+    .pc-x { width:32px; height:32px; border:0; border-radius:50%; background:rgba(255,255,255,.2); color:#fff; font-size:20px; cursor:pointer; }
+    .pc-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; scrollbar-width:none; overscroll-behavior-x:contain; }
+    .pc-track::-webkit-scrollbar { display:none; }
+    .pc-slide { min-width:100%; scroll-snap-align:start; padding:20px 22px 14px; text-align:center; }
+    .pc-rank { display:inline-block; padding:5px 12px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:13px; font-weight:800; margin-bottom:12px; }
+    .pc-image-wrap { height:245px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; }
+    .pc-image { width:100%; height:100%; object-fit:contain; }
+    .pc-image-empty { font-size:52px; color:#94a3b8; }
+    .pc-name { margin:14px 0 8px; color:#16243a; font-size:18px; font-weight:800; }
+    .pc-stock { display:inline-block; padding:7px 12px; border-radius:9px; font-size:13px; font-weight:800; }
+    .pc-stock.available { color:#166534; background:#dcfce7; }
+    .pc-stock.soldout { color:#991b1b; background:#fee2e2; }
+    .pc-detail { margin-top:8px; color:#64748b; font-size:12px; }
+    .pc-nav { display:flex; align-items:center; gap:10px; padding:10px 16px 16px; }
+    .pc-arrow { width:42px; height:38px; border:1px solid #cbd5e1; border-radius:9px; background:#f8fafc; color:#334155; font-size:18px; font-weight:800; cursor:pointer; }
+    .pc-arrow:disabled { opacity:.35; cursor:default; }
+    .pc-counter { flex:1; text-align:center; color:#475569; font-size:13px; font-weight:700; }
+    .pc-empty { min-width:100%; padding:45px 22px; text-align:center; color:#64748b; line-height:1.7; }
   </style>
 </head>
 <body>
@@ -338,6 +361,7 @@
         <div id="visitor-prize-section" style="margin-top:14px;"></div>
         <div id="project-period-notice" class="hidden" style="margin:10px 0;padding:10px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;color:#92400e;font-size:13px;line-height:1.6;text-align:center;"></div>
         <button class="btn btn-primary" id="btn-scan" style="display:none;">📷 QR 스캔하기</button>
+        <button class="btn btn-ghost" id="btn-prize-catalog" style="display:none;margin-top:10px;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;" onclick="openPrizeCatalog()">🎁 경품확인</button>
         <button class="btn btn-ghost" id="btn-show-my-qr" style="display:none;margin-top:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;" onclick="openMyQR()">📇 내 QR 보여주기</button>
         <button class="btn btn-ghost" id="btn-refresh" style="margin-top:10px;">새로고침</button>
       </section>
@@ -389,6 +413,24 @@
       <div id="qr-msg" class="qr-msg">정답입니다!</div>
       <div id="qr-sub" class="qr-sub"></div>
       <button class="qr-close" onclick="closeQuizResult()">확인</button>
+    </div>
+  </div>
+
+  <!-- 등록된 경품과 잔여 수량 확인 -->
+  <div id="prize-catalog-modal" onclick="if(event.target===this) closePrizeCatalog()">
+    <div class="pc-box" role="dialog" aria-modal="true" aria-labelledby="prize-catalog-title">
+      <div class="pc-head">
+        <h3 id="prize-catalog-title">🎁 경품 확인</h3>
+        <button class="pc-x" type="button" aria-label="닫기" onclick="closePrizeCatalog()">×</button>
+      </div>
+      <div id="prize-catalog-track" class="pc-track">
+        <div class="pc-empty">경품 정보를 불러오는 중입니다.</div>
+      </div>
+      <div id="prize-catalog-nav" class="pc-nav" style="display:none;">
+        <button id="prize-prev" class="pc-arrow" type="button" aria-label="이전 경품" onclick="movePrizeCatalog(-1)">‹</button>
+        <div id="prize-counter" class="pc-counter"></div>
+        <button id="prize-next" class="pc-arrow" type="button" aria-label="다음 경품" onclick="movePrizeCatalog(1)">›</button>
+      </div>
     </div>
   </div>
 
@@ -1037,6 +1079,10 @@
         } else {
           btnShowMyQr.style.display = (currentVisitor && currentVisitor.profile && currentVisitor.profile.qr_image_url) ? 'block' : 'none';
         }
+      }
+      const btnPrizeCatalog = $('btn-prize-catalog');
+      if (btnPrizeCatalog) {
+        btnPrizeCatalog.style.display = (mobileQrMode || isEntryUser) ? 'block' : 'none';
       }
 
       show('screen-progress');
@@ -1694,10 +1740,37 @@
     let deferredPrompt = null;
     const isiOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
     const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+    const PWA_INSTALLED_KEY = `pwa_installed_${projectSerial}`;
 
-    function showInstallBar() {
+    function rememberPwaInstalled() {
+      try { localStorage.setItem(PWA_INSTALLED_KEY, '1'); } catch (e) {}
+    }
+    async function isPwaAlreadyInstalled() {
+      if (isStandalone()) {
+        rememberPwaInstalled();
+        return true;
+      }
+      try {
+        if (localStorage.getItem(PWA_INSTALLED_KEY) === '1') return true;
+      } catch (e) {}
+      if ('getInstalledRelatedApps' in navigator) {
+        try {
+          const apps = await navigator.getInstalledRelatedApps();
+          if (Array.isArray(apps) && apps.length > 0) {
+            rememberPwaInstalled();
+            return true;
+          }
+        } catch (e) {}
+      }
+      return false;
+    }
+
+    async function showInstallBar() {
       if (EMBED_V) return;        // 랜딩 iframe 모달 안에서는 설치바 숨김
-      if (isStandalone()) return; // 이미 PWA 로 실행 중
+      if (await isPwaAlreadyInstalled()) {
+        $('install-bar').style.display = 'none';
+        return;
+      }
       $('install-bar').style.display = 'block';
       const btn = $('btn-install');
       const iosTip = $('install-ios-tip');
@@ -1722,13 +1795,20 @@
     });
 
     $('btn-install').addEventListener('click', async () => {
+      if (await isPwaAlreadyInstalled()) {
+        $('install-bar').style.display = 'none';
+        return;
+      }
       if (deferredPrompt) {
         try {
           deferredPrompt.prompt();
-          await deferredPrompt.userChoice;
+          const choice = await deferredPrompt.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            rememberPwaInstalled();
+            $('install-bar').style.display = 'none';
+          }
         } catch (err) {}
         deferredPrompt = null;
-        $('install-bar').style.display = 'none';
       } else {
         // 수동 설치 안내 팝업
         alert(
@@ -1742,8 +1822,18 @@
     });
     window.addEventListener('appinstalled', () => {
       deferredPrompt = null;
+      rememberPwaInstalled();
       $('install-bar').style.display = 'none';
     });
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+    if (standaloneQuery.addEventListener) {
+      standaloneQuery.addEventListener('change', e => {
+        if (e.matches) {
+          rememberPwaInstalled();
+          $('install-bar').style.display = 'none';
+        }
+      });
+    }
 
     // 프로젝트 정보 로드 후 앱 이름·iOS 메타·설치바 갱신
     function applyProjectNameForInstall(name) {
@@ -1903,6 +1993,94 @@
     }
 
     // ── 본인 등록 QR 모달 ──
+    let prizeCatalogItems = [];
+    let prizeCatalogIndex = 0;
+
+    async function openPrizeCatalog() {
+      const modal = $('prize-catalog-modal');
+      const track = $('prize-catalog-track');
+      const nav = $('prize-catalog-nav');
+      if (!modal || !track || !nav) return;
+      modal.style.display = 'flex';
+      track.innerHTML = '<div class="pc-empty">경품 정보를 불러오는 중입니다.</div>';
+      nav.style.display = 'none';
+      prizeCatalogItems = [];
+      prizeCatalogIndex = 0;
+      try {
+        const response = await fetch(`/api/visitor/projects/${encodeURIComponent(projectSerial)}/prize-info`, { cache:'no-store' });
+        const data = await response.json();
+        if (!response.ok || !data.ok || data.error) throw new Error('경품 정보를 확인할 수 없습니다.');
+        prizeCatalogItems = (data.prizes || []).slice().sort((a, b) =>
+          Number(a.ranking || 0) - Number(b.ranking || 0) || Number(a.id || 0) - Number(b.id || 0)
+        );
+        if (!prizeCatalogItems.length) {
+          track.innerHTML = '<div class="pc-empty">아직 등록된 경품이 없습니다.</div>';
+          return;
+        }
+        track.innerHTML = prizeCatalogItems.map(prize => {
+          const total = Math.max(0, Number(prize.winner_count || 0));
+          const claimed = Math.max(0, Number(prize.claimed_count || 0));
+          const available = Math.max(0, total - claimed);
+          const canChallenge = available > 0;
+          const image = prize.image_path
+            ? `<img class="pc-image" src="${esc(prize.image_path)}" alt="${esc(prize.prize_name || prize.rank_name || '경품')}">`
+            : '<div class="pc-image-empty">🎁</div>';
+          return `<article class="pc-slide">
+            <div class="pc-rank">${esc(prize.rank_name || `${prize.ranking}등`)}</div>
+            <div class="pc-image-wrap">${image}</div>
+            <div class="pc-name">${esc(prize.prize_name || '경품')}</div>
+            <div class="pc-stock ${canChallenge ? 'available' : 'soldout'}">
+              ${canChallenge ? `도전 가능 · 잔여 ${available}개` : '소진 · 도전할 수 없음'}
+            </div>
+            <div class="pc-detail">전체 ${total}개 · 당첨 완료 ${Math.min(total, claimed)}개</div>
+          </article>`;
+        }).join('');
+        nav.style.display = 'flex';
+        track.scrollLeft = 0;
+        updatePrizeCatalogPosition(0);
+      } catch (e) {
+        track.innerHTML = `<div class="pc-empty">${esc(e.message || '경품 정보를 불러오지 못했습니다.')}<br>잠시 후 다시 시도해 주세요.</div>`;
+      }
+    }
+
+    function closePrizeCatalog() {
+      const modal = $('prize-catalog-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function movePrizeCatalog(direction) {
+      const nextIndex = Math.max(0, Math.min(prizeCatalogItems.length - 1, prizeCatalogIndex + direction));
+      const track = $('prize-catalog-track');
+      if (track) track.scrollTo({ left: nextIndex * track.clientWidth, behavior:'smooth' });
+      updatePrizeCatalogPosition(nextIndex);
+    }
+
+    function updatePrizeCatalogPosition(index) {
+      if (!prizeCatalogItems.length) return;
+      prizeCatalogIndex = Math.max(0, Math.min(prizeCatalogItems.length - 1, Number(index || 0)));
+      const counter = $('prize-counter');
+      const prev = $('prize-prev');
+      const next = $('prize-next');
+      if (counter) counter.textContent = `${prizeCatalogIndex + 1} / ${prizeCatalogItems.length}`;
+      if (prev) prev.disabled = prizeCatalogIndex === 0;
+      if (next) next.disabled = prizeCatalogIndex === prizeCatalogItems.length - 1;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const track = $('prize-catalog-track');
+      if (track) track.addEventListener('scroll', () => {
+        if (!track.clientWidth || !prizeCatalogItems.length) return;
+        updatePrizeCatalogPosition(Math.round(track.scrollLeft / track.clientWidth));
+      }, { passive:true });
+    });
+    document.addEventListener('keydown', event => {
+      const modal = $('prize-catalog-modal');
+      if (!modal || modal.style.display !== 'flex') return;
+      if (event.key === 'Escape') closePrizeCatalog();
+      if (event.key === 'ArrowLeft') movePrizeCatalog(-1);
+      if (event.key === 'ArrowRight') movePrizeCatalog(1);
+    });
+
     async function openMyQR() {
       const modal = document.getElementById('visitor-myqr-modal');
       if (!modal) return;
@@ -1958,7 +2136,7 @@
       if (p.status === 'used') {
         html += `<div style="margin-top:10px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;color:#9a3412;font-size:11px;">이 QR 은 이미 사용되었습니다.</div>`;
       } else if (p.status === 'pending') {
-        html += `<div style="margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:11px;">현장 안내데스크에서 이 QR을 보여주시면 방문 확인 및 Gift 가 지급됩니다.</div>`;
+        html += `<div style="margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:11px;">현장 안내데스크에서 이 QR을 보여주세요</div>`;
       } else if (p.status === 'activated' || p.status === 'active') {
         html += `<div style="margin-top:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:11px;">가맹점에서 이 QR 을 스캔하면 Gift 가 사용됩니다.</div>`;
       }

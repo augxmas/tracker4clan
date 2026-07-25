@@ -2634,7 +2634,7 @@
                 상태: 미설정 (경품 배치를 진행하세요)
               </span>
               <button id="btn-prize-shuffle" class="btn btn-p" onclick="shufflePrizes()" style="padding:8px 16px; font-size:12px;">
-                🚀 경품등록완료 (무작위 배치하기)
+                🔀 경품 재배치
               </button>
             </div>
           </div>
@@ -13920,6 +13920,7 @@ let loadedPrizesCache = [];
 let selectedPrizeImageSource = null; // 'file' | 'resource' | null
 let selectedPrizeResourcePath = null;
 let editingPrizeId = null;
+let currentPrizeChallengersLimit = 0;
 
 async function loadPrizesTab() {
   const sel = document.getElementById('prize-project');
@@ -14032,8 +14033,11 @@ async function openPrizeResourceSelectModal() {
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#64748b;">자료실 이미지를 조회 중입니다...</div>';
   
   try {
-    const r = await fetch(`/api/host/resources`);
+    const r = await fetch('/api/resource/host/resources', { cache: 'no-store' });
     const d = await r.json();
+    if (!r.ok || !d.ok) {
+      throw new Error(d.message || '자료실 목록 조회에 실패했습니다.');
+    }
     
     const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'];
     const projIdStr = String(pid);
@@ -14053,20 +14057,25 @@ async function openPrizeResourceSelectModal() {
       return;
     }
     
-    grid.innerHTML = images.map(img => {
+    grid.innerHTML = '';
+    images.forEach(img => {
       const path = img.file_path;
       const title = img.title || img.file_name;
-      return `
-        <div class="prize-res-card" onclick="selectPrizeResource('${path}', '${esc(title)}')" style="cursor:pointer;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;background:#fff;transition:all 0.15s;">
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'prize-res-card';
+      card.style.cssText = 'cursor:pointer;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;background:#fff;transition:all 0.15s;font:inherit;';
+      card.innerHTML = `
           <div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:6px;overflow:hidden;margin-bottom:8px;border:1px solid #f1f5f9;">
-            <img src="${path}" style="max-width:100%;max-height:100%;object-fit:contain;">
+            <img src="${esc(path)}" alt="${esc(title)}" style="max-width:100%;max-height:100%;object-fit:contain;">
           </div>
           <div style="font-size:12px;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(title)}">
             ${esc(title)}
           </div>
-        </div>
       `;
-    }).join('');
+      card.addEventListener('click', () => selectPrizeResource(path, title));
+      grid.appendChild(card);
+    });
     
   } catch (e) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#dc2626;">자료실 이미지를 조회하는 중 오류가 발생했습니다.</div>';
@@ -14140,12 +14149,23 @@ async function savePrize() {
     await uiAlert('순위, 등수와 상품명을 모두 입력해 주세요.');
     return;
   }
+  const nextWinnerCount = Math.max(1, Number(count || 1));
+  const projectedPrizeCount = (loadedPrizesCache || []).reduce((sum, prize) => {
+    if (editingPrizeId && Number(prize.id) === Number(editingPrizeId)) return sum;
+    return sum + Math.max(1, Number(prize.winner_count || 1));
+  }, 0) + nextWinnerCount;
+  if (currentPrizeChallengersLimit > 0 && currentPrizeChallengersLimit < projectedPrizeCount) {
+    await uiAlert(
+      `도전인원(${currentPrizeChallengersLimit}명)은 취득 가능한 총 경품 수량(${projectedPrizeCount}개)보다 크거나 같아야 합니다.\n\n도전인원을 먼저 ${projectedPrizeCount}명 이상으로 변경하고 무작위 배치를 완료해 주세요.`
+    );
+    return;
+  }
   
   const formData = new FormData();
   formData.append('ranking', ranking || '1');
   formData.append('rank_name', rank);
   formData.append('prize_name', name);
-  formData.append('winner_count', count || '1');
+  formData.append('winner_count', String(nextWinnerCount));
   
   if (selectedPrizeImageSource === 'file') {
     const fileInp = document.getElementById('prize-file');
@@ -14195,18 +14215,19 @@ async function loadPrizeList() {
   tbody.innerHTML = '<tr><td colspan="8" style="color:#64748b;padding:24px;text-align:center;">조회 중입니다...</td></tr>';
   
   try {
-    const r = await fetch(`/api/host/projects/${pid}/prize-stats`);
+    const r = await fetch(`/api/host/projects/${pid}/prize-stats`, { cache: 'no-store' });
     const d = await r.json();
     
     // Update live stats card
     document.getElementById('prize-stat-visitors').innerText = `${(d.total_visitors || 0).toLocaleString('ko-KR')}명`;
     document.getElementById('prize-stat-eligible').innerText = `${(d.eligible_visitors || 0).toLocaleString('ko-KR')}명`;
     document.getElementById('prize-stat-challenged').innerText = `${(d.challenged_visitors || 0).toLocaleString('ko-KR')}명`;
+    currentPrizeChallengersLimit = Number(d.prize_challengers_limit || 0);
 
     // Update challengers input if not currently focused to avoid overwriting typed values
     const challengersInput = document.getElementById('prize-challengers-input');
     if (document.activeElement !== challengersInput) {
-      challengersInput.value = d.prize_challengers_limit || 100;
+      challengersInput.value = currentPrizeChallengersLimit || 100;
     }
 
     const statusEl = document.getElementById('prize-shuffle-status');
@@ -14220,6 +14241,13 @@ async function loadPrizeList() {
 
     const list = d.prizes || [];
     loadedPrizesCache = list;
+    const totalPrizeCount = list.reduce(
+      (sum, prize) => sum + Math.max(1, Number(prize.winner_count || 1)),
+      0
+    );
+    challengersInput.min = String(Math.max(1, totalPrizeCount));
+    document.getElementById('prize-shuffle-warning').textContent =
+      `* 도전인원은 취득 가능한 총 경품 수량(${totalPrizeCount}개)보다 크거나 같아야 합니다. 당첨자가 없다면 몇 번이고 다시 배치할 수 있습니다.`;
     
     if (list.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" style="color:#94a3b8;padding:24px;text-align:center;">등록된 경품이 없습니다.</td></tr>';
@@ -14374,7 +14402,10 @@ async function shufflePrizes() {
     return;
   }
 
-  const confirmed = await uiConfirm(`정말로 입력하신 도전인원 ${count}명 내에 경품을 무작위로 재배치하시겠습니까?\n\n* 주의: 기존의 모든 경품 도전 및 참여 기록(꽝 포함)이 초기화되고 완전히 새롭게 배치됩니다. 단, 이미 누군가가 '당첨'된 경품이 있을 경우 재배치가 차단됩니다.`);
+  const confirmed = await uiConfirm(
+    `도전인원 ${count}명 범위에서 아직 당첨자가 확정되지 않은 경품만 재배치하시겠습니까?\n\n` +
+    `* 기존 도전 기록, 당첨자 및 확정된 경품은 그대로 유지됩니다.`
+  );
   if (!confirmed) return;
 
   try {
@@ -14389,7 +14420,7 @@ async function shufflePrizes() {
       return;
     }
 
-    await uiAlert(d.message || '성공적으로 경품이 무작위 배치되었습니다!');
+    await uiAlert(d.message || '미확정 경품을 성공적으로 재배치했습니다.');
     loadPrizeList();
   } catch (err) {
     console.error(err);

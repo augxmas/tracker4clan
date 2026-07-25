@@ -113,6 +113,21 @@
   .disabled-banner { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 8px;
                      padding: 10px 12px; font-size: 13px; text-align: center; margin-bottom: 14px; }
   .footer-note { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px; }
+  .onsite-consent { display: none; margin: 14px 0; padding: 14px; border: 1.5px solid #86efac;
+                    background: #f0fdf4; border-radius: 10px; }
+  .onsite-consent.open { display: block; }
+  .onsite-consent h3 { margin-bottom: 5px; color: #166534; font-size: 15px; }
+  .onsite-consent .consent-sub { margin-bottom: 12px; color: #475569; font-size: 12px; line-height: 1.55; }
+  .onsite-consent details { margin-bottom: 8px; border: 1px solid #d1fae5; border-radius: 8px; background: #fff; }
+  .onsite-consent summary { padding: 10px 12px; color: #166534; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .onsite-consent .consent-doc { padding: 0 12px 11px; color: #475569; font-size: 11px; line-height: 1.65; }
+  .onsite-consent .consent-check { display: flex; align-items: flex-start; gap: 8px; padding: 9px 4px;
+                                   color: #1e293b; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .onsite-consent .consent-check.all { margin-top: 8px; border-top: 1px solid #bbf7d0; color: #166534; font-weight: 800; }
+  .onsite-consent .consent-check input { width: 17px; height: 17px; margin-top: 1px; accent-color: #15803d; flex-shrink: 0; }
+  .onsite-consent .consent-next { width: 100%; margin-top: 8px; padding: 12px; border: 0; border-radius: 8px;
+                                  background: #15803d; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .onsite-consent .consent-next:disabled { background: #94a3b8; cursor: not-allowed; }
   /* 완료 뷰 */
   .done-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; text-align: center; }
   .done-card h2 { font-size: 18px; color: #15803d; margin-bottom: 14px; }
@@ -268,6 +283,16 @@ const serial = location.pathname.split('/').filter(Boolean)[1] || '';
 // 출처 — landing 에서 왔으면 메뉴로 = 랜딩 #menu, 아니면 visitor 앱
 const FROM_LANDING = new URLSearchParams(location.search).get('from') === 'landing';
 const MENU_URL = serial ? (FROM_LANDING ? `/landing/${serial}#menu` : `/v/${serial}`) : '/';
+function sameOriginVisitorUrl(value) {
+  const fallback = serial ? `/v/${encodeURIComponent(serial)}` : '/';
+  if (!value) return fallback;
+  try {
+    const parsed = new URL(String(value), location.origin);
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch (e) {
+    return fallback;
+  }
+}
 // 랜딩 iframe 모달로 임베드(embed=1)된 경우 — '메뉴로/닫기' 는 부모 모달을 닫는다
 const EMBED = new URLSearchParams(location.search).get('embed') === '1';
 function goMenu(){ if (EMBED){ try{ window.parent.postMessage({type:'feat-close'},'*'); }catch(e){} return; } location.href = MENU_URL; }
@@ -300,15 +325,97 @@ function saveEmail(serial, email, verified, name, code) {
 function clearSavedEmail(serial) {
   try { localStorage.removeItem(SAVE_KEY_PREFIX + serial); } catch (e) {}
 }
+function showOnsiteConsent() {
+  const consent = document.getElementById('onsite-consent');
+  if (consent) {
+    consent.classList.add('open');
+    consent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+function toggleOnsiteConsentAll(checked) {
+  const terms = document.getElementById('onsite-consent-terms');
+  const privacy = document.getElementById('onsite-consent-privacy');
+  if (terms) terms.checked = checked;
+  if (privacy) privacy.checked = checked;
+  syncOnsiteConsent();
+}
+function syncOnsiteConsent() {
+  const terms = !!document.getElementById('onsite-consent-terms')?.checked;
+  const privacy = !!document.getElementById('onsite-consent-privacy')?.checked;
+  const all = document.getElementById('onsite-consent-all');
+  const next = document.getElementById('btn-onsite-consent');
+  if (all) {
+    all.checked = terms && privacy;
+    all.indeterminate = terms !== privacy;
+  }
+  if (next) next.disabled = !(terms && privacy);
+}
+function acceptOnsiteConsent() {
+  const terms = !!document.getElementById('onsite-consent-terms')?.checked;
+  const privacy = !!document.getElementById('onsite-consent-privacy')?.checked;
+  if (!(terms && privacy)) {
+    alert('이용약관 및 개인정보 수집·이용에 모두 동의해 주세요.');
+    return;
+  }
+  onsiteConsentAccepted = true;
+  try { localStorage.setItem(`tracker_consent_${serial}`, '1'); } catch (e) {}
+  if (onsiteConsentNextUrl) {
+    location.href = onsiteConsentNextUrl;
+    return;
+  }
+  const consent = document.getElementById('onsite-consent');
+  if (consent) consent.style.display = 'none';
+  const wrap = document.getElementById('others-wrap');
+  if (wrap) {
+    wrap.classList.remove('locked');
+    wrap.style.display = 'block';
+  }
+  const btnSubmit = document.getElementById('btn-submit');
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.style.display = 'block';
+  }
+  const msg = document.getElementById('verify-msg');
+  if (msg) {
+    msg.innerHTML = '✓ 이메일 인증 및 필수 동의 완료<br><b style="color:#15803d;">아래 현장등록 양식을 작성해 주세요.</b>';
+    msg.className = 'verify-msg ok';
+  }
+}
 let cfg = null;
 let emailVerified = false;
 let pendingCode = '';
+let onsiteConsentAccepted = false;
+let onsiteConsentNextUrl = '';
 
 // ── PWA: 프로젝트별 manifest + 서비스워커 등록 + 설치 안내 ──
 if (serial) {
   document.getElementById('manifest-link').setAttribute('href', `/api/visitor/manifest/${encodeURIComponent(serial)}`);
 }
 let deferredInstallPrompt = null;
+const PWA_INSTALLED_KEY = `pwa_installed_${serial}`;
+const isPwaStandalone = () => window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+function rememberPwaInstalled() {
+  try { localStorage.setItem(PWA_INSTALLED_KEY, '1'); } catch (e) {}
+}
+async function isPwaAlreadyInstalled() {
+  if (isPwaStandalone()) {
+    rememberPwaInstalled();
+    return true;
+  }
+  try {
+    if (localStorage.getItem(PWA_INSTALLED_KEY) === '1') return true;
+  } catch (e) {}
+  if ('getInstalledRelatedApps' in navigator) {
+    try {
+      const apps = await navigator.getInstalledRelatedApps();
+      if (Array.isArray(apps) && apps.length > 0) {
+        rememberPwaInstalled();
+        return true;
+      }
+    } catch (e) {}
+  }
+  return false;
+}
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
@@ -316,6 +423,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
+  rememberPwaInstalled();
   const box = document.getElementById('pwa-install-box');
   if (box) box.style.display = 'none';
 });
@@ -324,11 +432,10 @@ if ('serviceWorker' in navigator && serial) {
   navigator.serviceWorker.register(`/v/${serial}/sw.js`, { scope: `/v/${serial}/` }).catch(() => {});
 }
 // 완료 카드에서 PWA 설치 박스 표시 갱신
-function refreshPwaInstallBox() {
+async function refreshPwaInstallBox() {
   const box = document.getElementById('pwa-install-box');
   if (!box) return;
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
-  if (isStandalone) { box.style.display = 'none'; return; }
+  if (await isPwaAlreadyInstalled()) { box.style.display = 'none'; return; }
   box.style.display = '';
   const iosTip = document.getElementById('pwa-ios-tip');
   const isiOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -340,10 +447,18 @@ function refreshPwaInstallBox() {
     btn.textContent = '📲 홈 화면에 앱 설치';
     
     btn.onclick = async () => {
+      if (await isPwaAlreadyInstalled()) {
+        box.style.display = 'none';
+        return;
+      }
       if (deferredInstallPrompt) {
         try {
           await deferredInstallPrompt.prompt();
-          await deferredInstallPrompt.userChoice;
+          const choice = await deferredInstallPrompt.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            rememberPwaInstalled();
+            box.style.display = 'none';
+          }
         } catch (e) {}
         deferredInstallPrompt = null;
       } else {
@@ -357,6 +472,16 @@ function refreshPwaInstallBox() {
       }
     };
   }
+}
+const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+if (standaloneQuery.addEventListener) {
+  standaloneQuery.addEventListener('change', (e) => {
+    if (e.matches) {
+      rememberPwaInstalled();
+      const box = document.getElementById('pwa-install-box');
+      if (box) box.style.display = 'none';
+    }
+  });
 }
 
 function esc(s) { return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -499,6 +624,40 @@ function render() {
   const othersHtml = others.length
     ? `<div class="locked" id="others-wrap" style="${othersStyle}">${others.map(fieldHtml).join('')}</div>`
     : '';
+  const consentHtml = isOnsite ? `
+    <div class="onsite-consent" id="onsite-consent">
+      <h3>이용약관 및 개인정보 수집·이용 동의</h3>
+      <p class="consent-sub">이메일 인증이 완료되었습니다. 현장등록과 방문 인증을 계속하려면 아래 필수 항목에 동의해 주세요.</p>
+      <details>
+        <summary>이용약관 보기 (필수)</summary>
+        <div class="consent-doc">
+          본 약관은 방문자가 Tour 방문 인증 서비스를 이용할 때 운영자와 방문자의 권리·의무 및 이용 절차를 규정합니다.
+          방문자는 현장 QR을 촬영하고 휴대폰 번호로 본인을 확인하여 방문을 기록하며, 동일 번호의 중복 방문은 1회로 처리됩니다.
+        </div>
+      </details>
+      <details>
+        <summary>개인정보 수집·이용 안내 보기 (필수)</summary>
+        <div class="consent-doc">
+          <b>수집 항목:</b> 현장등록 정보, 휴대폰 번호, 방문 Tour 및 방문 일시<br>
+          <b>이용 목적:</b> 방문자 식별, 방문 인증 및 진행 현황 제공, Gift 지급 대상 확인<br>
+          <b>보유 기간:</b> 프로젝트 종료 후 3개월까지 보관 후 파기<br>
+          동의를 거부할 수 있으나, 거부 시 현장등록 및 방문 인증 서비스 이용이 제한됩니다.
+        </div>
+      </details>
+      <label class="consent-check all">
+        <input type="checkbox" id="onsite-consent-all" onchange="toggleOnsiteConsentAll(this.checked)">
+        <span>전체 동의합니다</span>
+      </label>
+      <label class="consent-check">
+        <input type="checkbox" id="onsite-consent-terms" onchange="syncOnsiteConsent()">
+        <span>[필수] 이용약관에 동의합니다</span>
+      </label>
+      <label class="consent-check">
+        <input type="checkbox" id="onsite-consent-privacy" onchange="syncOnsiteConsent()">
+        <span>[필수] 개인정보 수집·이용에 동의합니다</span>
+      </label>
+      <button type="button" class="consent-next" id="btn-onsite-consent" onclick="acceptOnsiteConsent()" disabled>동의하고 현장등록 계속</button>
+    </div>` : '';
 
   document.getElementById('wrap').innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -524,9 +683,10 @@ function render() {
     </div>
     <div class="form-card">
       ${emailHtml}
+      ${consentHtml}
       ${othersHtml}
       <button type="button" class="submit" id="btn-submit" disabled onclick="onSubmit()" style="${isOnsite ? 'display: none;' : ''}">${modeLabel} 신청하기</button>
-      <div class="footer-note">${isOnsite ? '※ 이미 등록된 가입자는 로그인 시 즉시 서비스로 연결됩니다.' : '※ 본 페이지는 입장 신청용 입력 폼입니다. 제출 처리 흐름은 다음 단계에서 활성화됩니다.'}</div>
+      <div class="footer-note">${isOnsite ? '※ 기존 등록자는 이메일 인증 후 바로 서비스로 연결됩니다.' : '※ 본 페이지는 입장 신청용 입력 폼입니다. 제출 처리 흐름은 다음 단계에서 활성화됩니다.'}</div>
     </div>`;
   // form 화면 표시 후 PWA 설치 박스 갱신
   try { refreshPwaInstallBox(); } catch (e) {}
@@ -781,9 +941,16 @@ async function confirmVerifyCode() {
     }
 
     if (mode === 'e') {
-      showCustomAlert('이미 등록된 정보가 확인되어 로그인 완료되었습니다. 행사 입장 페이지로 이동합니다.', () => {
-        location.href = lookup.reservation.visitor_url;
-      });
+      emailVerified = true;
+      verifiedCode = code;
+      onsiteConsentNextUrl = sameOriginVisitorUrl(lookup.reservation.visitor_url);
+      msg.innerHTML = '✓ 이메일 인증 완료<br><b style="color:#15803d;">필수 약관 동의 후 행사 입장 페이지로 이동합니다.</b>';
+      msg.className = 'verify-msg ok';
+      document.getElementById('f-email').disabled = true;
+      document.getElementById('f-code').disabled = true;
+      document.getElementById('btn-send').disabled = true;
+      document.getElementById('btn-verify').disabled = true;
+      showOnsiteConsent();
       return;
     }
 
@@ -810,12 +977,22 @@ async function confirmVerifyCode() {
   alert('최초 인증 통과 시 인증코드가 비밀번호로 활용됩니다.');
   emailVerified = true;
   verifiedCode = code;
-  msg.innerHTML = '✓ 이메일 인증 완료' + (mode === 'e' ? '<br><b style="color:#15803d;">미등록 이메일입니다. 아래 현장등록 폼을 작성해 주세요.</b>' : '');
+  msg.innerHTML = '✓ 이메일 인증 완료' + (mode === 'e' ? '<br><b style="color:#15803d;">미등록 이메일입니다. 필수 약관 동의 후 현장등록을 계속해 주세요.</b>' : '');
   msg.className = 'verify-msg ok';
   document.getElementById('f-email').disabled = true;
   document.getElementById('f-code').disabled  = true;
   document.getElementById('btn-send').disabled = true;
   document.getElementById('btn-verify').disabled = true;
+  // 자동 저장 옵션이 체크되어 있으면 localStorage 에 저장
+  const remember = document.getElementById('f-remember');
+  if (remember && remember.checked) saveEmail(serial, email, true, '', code);
+  else clearSavedEmail(serial);
+
+  if (mode === 'e') {
+    showOnsiteConsent();
+    return;
+  }
+
   const wrap = document.getElementById('others-wrap');
   if (wrap) {
     wrap.classList.remove('locked');
@@ -826,10 +1003,6 @@ async function confirmVerifyCode() {
     btnSubmit.disabled = false;
     btnSubmit.style.display = 'block';
   }
-  // 자동 저장 옵션이 체크되어 있으면 localStorage 에 저장
-  const remember = document.getElementById('f-remember');
-  if (remember && remember.checked) saveEmail(serial, email, true, '', code);
-  else clearSavedEmail(serial);
 }
 
 function renderAlreadyRegistered(rsv) {
@@ -882,7 +1055,7 @@ function renderAlreadyRegistered(rsv) {
       ${rsv.qr_image_url ? `<div class="qr-box"><img src="${rsv.qr_image_url}" alt="QR"></div>` : ''}
       <div class="btn-row">
         ${rsv.qr_image_url ? `<button class="btn-save" onclick="downloadQr('${rsv.qr_image_url}','existing')">💾 QR 저장</button>` : ''}
-        <a class="btn-visit" href="${esc(rsv.visitor_url || '#')}">🚀 입장/활동 시작</a>
+        <a class="btn-visit" href="${esc(sameOriginVisitorUrl(rsv.visitor_url))}">🚀 입장/활동 시작</a>
       </div>
       <p class="done-tip">동일 이메일로 다시 신청할 수 없습니다. 위 QR 또는 링크로 입장 절차를 진행해 주세요.</p>
       <!-- 메뉴로 돌아가기 -->
@@ -893,6 +1066,11 @@ function renderAlreadyRegistered(rsv) {
 }
 async function onSubmit() {
   if (!emailVerified) { alert('이메일 인증을 완료해 주세요.'); return; }
+  if (mode === 'e' && !onsiteConsentAccepted) {
+    alert('이용약관 및 개인정보 수집·이용 동의를 완료해 주세요.');
+    showOnsiteConsent();
+    return;
+  }
   // 필수 항목 검증
   const fieldsObj = { email: document.getElementById('f-email').value.trim() };
   const fields = cfg.fields || [];
@@ -932,6 +1110,8 @@ async function onSubmit() {
         fields: fieldsObj,
         email_verified: true,
         code: verifiedCode,
+        terms_consented: mode === 'e' ? onsiteConsentAccepted : true,
+        privacy_consented: mode === 'e' ? onsiteConsentAccepted : true,
       }),
     });
     const d = await r.json();
@@ -943,6 +1123,7 @@ async function onSubmit() {
         entry_window_closed: '현장등록 기간이 아닙니다.',
         reservation_disabled: '사전등록이 비활성화되어 있습니다.',
         entry_disabled: '현장등록이 비활성화되어 있습니다.',
+        consent_required: '이용약관 및 개인정보 수집·이용 동의를 완료해 주세요.',
       };
       alert(msgs[d.error] || d.message || '신청 처리에 실패했습니다.');
       btn.disabled = false; btn.textContent = modeLabel + ' 신청하기';
@@ -976,7 +1157,7 @@ function renderDone(d) {
         : ''}
       <div class="btn-row">
         <button class="btn-save" onclick="downloadQr('${d.qr_image_url}', '${d.token}')">💾 QR 저장</button>
-        <a class="btn-visit" href="${esc(d.visitor_url)}">🚀 입장/활동 시작</a>
+        <a class="btn-visit" href="${esc(sameOriginVisitorUrl(d.visitor_url))}">🚀 입장/활동 시작</a>
       </div>
       <p class="done-tip">※ 'QR 저장' 으로 휴대폰 갤러리에 저장한 후, 현장에서 'QR 저장' 으로 다운로드된 이미지나 본 페이지의 링크로 입장 절차를 진행할 수 있습니다.</p>
 
