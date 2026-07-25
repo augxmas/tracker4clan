@@ -269,6 +269,77 @@ router.delete("/host/prizes/:id", requireHost, async (req, res) => {
   }
 });
 
+// 4.4 Get every prize winner for a project
+router.get("/host/projects/:projectId/prize-winners", requireHost, async (req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-store");
+    const projectId = Number(req.params.projectId);
+    const hostId = req.session.host!.id;
+
+    const [projectRows] = await pool.execute(
+      "SELECT id FROM projects WHERE id = ? AND host_id = ?",
+      [projectId, hostId],
+    );
+    if (!Array.isArray(projectRows) || projectRows.length === 0) {
+      res.status(404).json({ ok: false, error: "project_not_found", message: "프로젝트를 찾을 수 없거나 권한이 없습니다." });
+      return;
+    }
+
+    const [winnerRows] = await pool.execute(
+      `SELECT vpc.id, vpc.visitor_id, vpc.slot_index, vpc.challenged_at, v.phone,
+              pp.id AS prize_id, pp.ranking, pp.rank_name, pp.prize_name
+         FROM visitor_prize_challenges vpc
+         JOIN visitors v ON v.id = vpc.visitor_id
+         JOIN project_prizes pp ON pp.id = vpc.prize_id
+        WHERE vpc.project_id = ? AND vpc.prize_id IS NOT NULL
+        ORDER BY pp.ranking ASC, vpc.challenged_at DESC, vpc.id DESC`,
+      [projectId],
+    );
+    const winners = Array.isArray(winnerRows) ? winnerRows : [];
+
+    const nameMap = new Map<string, string>();
+    const emailMap = new Map<string, string>();
+    if (winners.length > 0) {
+      const [reservationRows] = await pool.execute(
+        "SELECT fields_json, email_lower FROM reservations WHERE project_id = ?",
+        [projectId],
+      );
+      (Array.isArray(reservationRows) ? reservationRows : []).forEach((row: any) => {
+        try {
+          const fields = JSON.parse(row.fields_json || "{}");
+          const phone = String(fields.mobile || fields.phone || "").replace(/\D/g, "");
+          if (!phone) return;
+          if (fields.name) nameMap.set(phone, String(fields.name));
+          const email = row.email_lower || fields.email;
+          if (email) emailMap.set(phone, String(email));
+        } catch {}
+      });
+    }
+
+    res.json({
+      ok: true,
+      winners: winners.map((winner: any) => {
+        const phoneKey = String(winner.phone || "").replace(/\D/g, "");
+        return {
+          id: Number(winner.id),
+          visitor_id: Number(winner.visitor_id),
+          prize_id: Number(winner.prize_id),
+          ranking: Number(winner.ranking || 1),
+          rank_name: winner.rank_name,
+          prize_name: winner.prize_name,
+          name: nameMap.get(phoneKey) || "미지정",
+          phone: winner.phone,
+          email: emailMap.get(phoneKey) || "",
+          slot_index: Number(winner.slot_index),
+          challenged_at: winner.challenged_at,
+        };
+      }),
+    });
+  } catch (err: any) {
+    res.status(500).json({ ok: false, error: "db_error", message: err.message });
+  }
+});
+
 // 4.5 Get winners list for a specific prize
 router.get("/host/prizes/:id/winners", requireHost, async (req, res) => {
   try {

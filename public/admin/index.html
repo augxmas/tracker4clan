@@ -2730,6 +2730,35 @@
           </div>
         </div>
 
+        <!-- 프로젝트 전체 당첨자 현황 -->
+        <div style="border-top:1px solid #e2e8f0;padding-top:18px;margin-bottom:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:700;color:#475569;">당첨자 현황</div>
+            <div id="prize-winner-grid-count" style="font-size:12px;font-weight:700;color:#2563eb;">총 0명</div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:55px;">번호</th>
+                  <th style="width:80px;">등수</th>
+                  <th>상품명</th>
+                  <th style="width:100px;">이름</th>
+                  <th style="width:130px;">휴대폰 번호</th>
+                  <th style="width:180px;">이메일</th>
+                  <th style="width:90px;">도전 순서</th>
+                  <th style="width:150px;">당첨 일시</th>
+                </tr>
+              </thead>
+              <tbody id="prize-winner-grid-tbody">
+                <tr>
+                  <td colspan="8" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- 경품 목록 영역 -->
         <div style="border-top:1px solid #e2e8f0; padding-top:18px;">
           <div style="font-size:13px; font-weight:700; color:#475569; margin-bottom:12px;">등록된 경품 목록</div>
@@ -14322,6 +14351,49 @@ function renderPrizeWinningStatus(prizes) {
   }).join('');
 }
 
+async function loadPrizeWinnerGrid(projectId) {
+  const tbody = document.getElementById('prize-winner-grid-tbody');
+  const count = document.getElementById('prize-winner-grid-count');
+  tbody.innerHTML = '<tr><td colspan="8" style="color:#64748b;padding:24px;text-align:center;">조회 중입니다...</td></tr>';
+  count.textContent = '조회 중...';
+
+  try {
+    const response = await fetch(`/api/host/projects/${projectId}/prize-winners`, { cache:'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.message || '당첨자 현황 조회 실패');
+
+    const winners = Array.isArray(data.winners) ? data.winners : [];
+    count.textContent = `총 ${winners.length.toLocaleString('ko-KR')}명`;
+    if (!winners.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td></tr>';
+      return true;
+    }
+
+    tbody.innerHTML = winners.map((winner, index) => {
+      const challengedAt = winner.challenged_at
+        ? new Date(winner.challenged_at).toLocaleString('ko-KR')
+        : '-';
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td style="font-weight:800;color:#b45309;">${esc(winner.rank_name || `${winner.ranking}등`)}</td>
+          <td style="font-weight:700;color:#1e293b;">${esc(winner.prize_name || '-')}</td>
+          <td>${esc(winner.name || '미지정')}</td>
+          <td>${esc(winner.phone || '-')}</td>
+          <td style="color:#64748b;">${esc(winner.email || '-')}</td>
+          <td style="font-weight:700;color:#2563eb;">${Number(winner.slot_index).toLocaleString('ko-KR')}번째</td>
+          <td style="font-size:12px;color:#64748b;">${challengedAt}</td>
+        </tr>`;
+    }).join('');
+    return true;
+  } catch (error) {
+    console.error(error);
+    count.textContent = '조회 실패';
+    tbody.innerHTML = '<tr><td colspan="8" style="color:#dc2626;padding:24px;text-align:center;">당첨자 현황을 불러오지 못했습니다.</td></tr>';
+    return false;
+  }
+}
+
 async function loadPrizeList() {
   const pid = document.getElementById('prize-project').value;
   if (!pid) return;
@@ -14358,6 +14430,7 @@ async function loadPrizeList() {
     const list = d.prizes || [];
     loadedPrizesCache = list;
     renderPrizeWinningStatus(list);
+    const winnerGridLoaded = await loadPrizeWinnerGrid(pid);
     const totalPrizeCount = list.reduce(
       (sum, prize) => sum + Math.max(1, Number(prize.winner_count || 1)),
       0
@@ -14368,7 +14441,7 @@ async function loadPrizeList() {
     
     if (list.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="color:#94a3b8;padding:24px;text-align:center;">등록된 경품이 없습니다.</td></tr>';
-      return true;
+      return winnerGridLoaded;
     }
     
     tbody.innerHTML = list.map((item, idx) => {
@@ -14404,7 +14477,7 @@ async function loadPrizeList() {
         </tr>
       `;
     }).join('');
-    return true;
+    return winnerGridLoaded;
     
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="9" style="color:#dc2626;padding:24px;text-align:center;">경품 목록 조회 실패</td></tr>';
