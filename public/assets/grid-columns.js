@@ -221,11 +221,11 @@
       handle.style.cssText =
         "position:absolute;top:0;right:-3px;width:7px;height:100%;z-index:9;" +
         "cursor:col-resize;touch-action:none;user-select:none;" +
-        "background:linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px);";
+        "background:linear-gradient(90deg,transparent 3px,rgba(148,163,184,.28) 3px,rgba(148,163,184,.28) 4px,transparent 4px);";
       handle.onmouseenter = function () { this.style.background = "rgba(37,99,235,.35)"; };
       handle.onmouseleave = function () {
         if (!this.hasAttribute("data-resizing")) {
-          this.style.background = "linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px)";
+          this.style.background = "linear-gradient(90deg,transparent 3px,rgba(148,163,184,.28) 3px,rgba(148,163,184,.28) 4px,transparent 4px)";
         }
       };
       handle.addEventListener("pointerdown", function (event) {
@@ -259,7 +259,7 @@
           document.body.style.cursor = "";
           document.body.style.userSelect = "";
           target.removeAttribute("data-resizing");
-          target.style.background = "linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px)";
+          target.style.background = "linear-gradient(90deg,transparent 3px,rgba(148,163,184,.28) 3px,rgba(148,163,184,.28) 4px,transparent 4px)";
           savePrefs(table, prefs);
         }
         target.addEventListener("pointermove", move);
