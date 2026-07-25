@@ -9,8 +9,9 @@
 (function () {
   "use strict";
 
-  var prefsCache = {};      // grid_key -> { order:[origIdx...], hidden:[origIdx...] }
+  var prefsCache = {};      // grid_key -> { order, hidden, freeze, widths:{ origIdx:px } }
   var prefsLoaded = false;
+  var CLIENT_PREFS_KEY = "tracker_grid_prefs_v1";
 
   // ── 유틸 ──
   function hash(str) {
@@ -38,7 +39,13 @@
   function origCols(table) {
     if (table.__gcCols) return table.__gcCols;
     var ths = table.tHead.rows[0].cells, cols = [];
-    for (var i = 0; i < ths.length; i++) cols.push({ idx: i, label: cleanLabel(ths[i]) || ("컬럼 " + (i + 1)) });
+    for (var i = 0; i < ths.length; i++) cols.push({
+      idx: i,
+      label: cleanLabel(ths[i]) || ("컬럼 " + (i + 1)),
+      width: ths[i].style.width || "",
+      minWidth: ths[i].style.minWidth || "",
+      maxWidth: ths[i].style.maxWidth || ""
+    });
     table.__gcCols = cols;
     return cols;
   }
@@ -57,10 +64,11 @@
     var n = origCols(table).length;
     var p = prefsCache[gridKey(table)];
     var freeze = (p && p.freeze != null) ? p.freeze : null;
+    var widths = (p && p.widths && typeof p.widths === "object") ? Object.assign({}, p.widths) : {};
     if (!p || !Array.isArray(p.order) || p.order.length !== n) {
-      return { order: range(n), hidden: (p && Array.isArray(p.hidden)) ? p.hidden.slice() : [], freeze: freeze };
+      return { order: range(n), hidden: (p && Array.isArray(p.hidden)) ? p.hidden.slice() : [], freeze: freeze, widths: widths };
     }
-    return { order: p.order.slice(), hidden: (p.hidden || []).slice(), freeze: freeze };
+    return { order: p.order.slice(), hidden: (p.hidden || []).slice(), freeze: freeze, widths: widths };
   }
 
   // ── 적용 (헤더+바디 셀을 원본 index(data-col) 기준으로 재배치/숨김) ──
@@ -73,6 +81,42 @@
       for (var j = 0; j < cells.length; j++) if (cells[j].getAttribute("data-col") === String(ci)) { cell = cells[j]; break; }
       if (cell) { cell.style.display = hiddenSet.has(ci) ? "none" : ""; row.appendChild(cell); }
     });
+  }
+  function applyWidthToCell(cell, width, original) {
+    if (!cell) return;
+    if (width != null && Number(width) > 0) {
+      var px = Math.max(48, Math.min(800, Math.round(Number(width)))) + "px";
+      cell.style.width = px;
+      cell.style.minWidth = px;
+      cell.style.maxWidth = px;
+      cell.style.boxSizing = "border-box";
+      cell.setAttribute("data-gc-width", "1");
+      return;
+    }
+    if (!cell.hasAttribute("data-gc-width")) return;
+    cell.style.width = original ? original.width : "";
+    cell.style.minWidth = original ? original.minWidth : "";
+    cell.style.maxWidth = original ? original.maxWidth : "";
+    cell.style.boxSizing = "";
+    cell.removeAttribute("data-gc-width");
+  }
+  function applyColumnWidths(table, prefs) {
+    var p = prefs || getPrefs(table);
+    var widths = p.widths || {};
+    var cols = origCols(table);
+    var headRow = table.tHead && table.tHead.rows[0];
+    if (!headRow) return;
+    for (var ci = 0; ci < cols.length; ci++) {
+      var width = widths[String(ci)];
+      applyWidthToCell(cellByCol(headRow, ci), width, cols[ci]);
+      for (var b = 0; b < table.tBodies.length; b++) {
+        var rows = table.tBodies[b].rows;
+        for (var r = 0; r < rows.length; r++) {
+          if (rows[r].cells.length === 1 && (rows[r].cells[0].colSpan || 1) > 1) continue;
+          applyWidthToCell(cellByCol(rows[r], ci), width, null);
+        }
+      }
+    }
   }
   function applyTable(table) {
     var n = origCols(table).length;
@@ -88,6 +132,8 @@
         applyRow(row, p.order, hiddenSet, n);
       }
     }
+    applyColumnWidths(table, p);
+    ensureResizeHandles(table);
     applyFreeze(table);
   }
 
@@ -150,11 +196,78 @@
 
   function savePrefs(table, prefs) {
     var k = gridKey(table);
+    prefs._savedAt = Date.now();
     prefsCache[k] = prefs;
+    try { localStorage.setItem(CLIENT_PREFS_KEY, JSON.stringify(prefsCache)); } catch (e) {}
     fetch("/api/grid-prefs", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ grid_key: k, prefs: prefs }),
     }).catch(function () {});
+  }
+
+  // ── 헤더 경계 드래그 컬럼 폭 조절 ──
+  function ensureResizeHandles(table) {
+    var headRow = table.tHead && table.tHead.rows[0];
+    if (!headRow) return;
+    var cells = headRow.children;
+    for (var i = 0; i < cells.length; i++) {
+      var th = cells[i];
+      if (th.querySelector(":scope > .gc-resizer")) continue;
+      if (th.getAttribute("data-col") === null) continue;
+      if (!th.style.position) th.style.position = "relative";
+      var handle = document.createElement("span");
+      handle.className = "gc-resizer";
+      handle.title = "드래그하여 컬럼 폭 조절";
+      handle.style.cssText =
+        "position:absolute;top:0;right:-3px;width:7px;height:100%;z-index:9;" +
+        "cursor:col-resize;touch-action:none;user-select:none;" +
+        "background:linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px);";
+      handle.onmouseenter = function () { this.style.background = "rgba(37,99,235,.35)"; };
+      handle.onmouseleave = function () {
+        if (!this.hasAttribute("data-resizing")) {
+          this.style.background = "linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px)";
+        }
+      };
+      handle.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var target = event.currentTarget;
+        var header = target.parentElement;
+        var ci = parseInt(header.getAttribute("data-col"), 10);
+        if (isNaN(ci)) return;
+        var startX = event.clientX;
+        var startWidth = header.getBoundingClientRect().width;
+        var prefs = getPrefs(table);
+        target.setPointerCapture(event.pointerId);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+        target.setAttribute("data-resizing", "1");
+        target.style.background = "rgba(37,99,235,.35)";
+
+        function move(e) {
+          var width = Math.max(48, Math.min(800, startWidth + e.clientX - startX));
+          prefs.widths[String(ci)] = Math.round(width);
+          prefsCache[gridKey(table)] = prefs;
+          applyColumnWidths(table, prefs);
+          applyFreeze(table);
+        }
+        function end(e) {
+          target.removeEventListener("pointermove", move);
+          target.removeEventListener("pointerup", end);
+          target.removeEventListener("pointercancel", end);
+          try { target.releasePointerCapture(e.pointerId); } catch (ignore) {}
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+          target.removeAttribute("data-resizing");
+          target.style.background = "linear-gradient(90deg,transparent 3px,#cbd5e1 3px,#cbd5e1 4px,transparent 4px)";
+          savePrefs(table, prefs);
+        }
+        target.addEventListener("pointermove", move);
+        target.addEventListener("pointerup", end);
+        target.addEventListener("pointercancel", end);
+      });
+      th.appendChild(handle);
+    }
   }
 
   // ── 컬럼조정 패널 ──
@@ -164,6 +277,7 @@
     var p = getPrefs(table);
     var hiddenSet = {}; p.hidden.forEach(function (h) { hiddenSet[h] = 1; });
     var freeze = (p.freeze != null) ? p.freeze : null;
+    var widths = Object.assign({}, p.widths || {});
 
     // 중앙 모달(헤더/푸터 고정 + 본문 세로 스크롤)
     var panel = document.createElement("div");
@@ -180,7 +294,7 @@
         '</div>' +
         // 본문 (세로 스크롤)
         '<div style="flex:1;min-height:0;overflow-y:auto;padding:14px 18px;">' +
-          '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">표시할 컬럼을 선택하고, 드래그(⠿)로 순서를 바꾸세요. 📌 를 누르면 <b>그 컬럼까지 좌측 틀 고정</b>됩니다.</div>' +
+          '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">표시할 컬럼을 선택하고, 드래그(⠿)로 순서를 바꾸세요. 표 헤더 경계를 드래그하면 폭을 조절할 수 있습니다. 📌 는 좌측 틀 고정입니다.</div>' +
           '<div id="gc-list"></div>' +
         '</div>' +
         // 푸터 (고정)
@@ -237,7 +351,7 @@
       });
       // freeze 컬럼이 숨김이면 고정 해제
       if (freeze != null && hidden.indexOf(freeze) >= 0) freeze = null;
-      var prefs = { order: order, hidden: hidden, freeze: freeze };
+      var prefs = { order: order, hidden: hidden, freeze: freeze, widths: widths };
       prefsCache[gridKey(table)] = prefs;
       applyTable(table);
       savePrefs(table, prefs);
@@ -283,7 +397,8 @@
     panel.querySelector("#gc-reset").onclick = function () {
       var n = cols.length;
       freeze = null;
-      var prefs = { order: range(n), hidden: [], freeze: null };
+      widths = {};
+      var prefs = { order: range(n), hidden: [], freeze: null, widths: {} };
       prefsCache[gridKey(table)] = prefs;
       applyTable(table);
       savePrefs(table, prefs);
@@ -351,9 +466,27 @@
 
   // ── 초기화 ──
   function init() {
+    try {
+      var localPrefs = JSON.parse(localStorage.getItem(CLIENT_PREFS_KEY) || "{}");
+      if (localPrefs && typeof localPrefs === "object") prefsCache = localPrefs;
+    } catch (e) {}
     fetch("/api/grid-prefs")
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d && d.ok && d.prefs) prefsCache = d.prefs; })
+      .then(function (d) {
+        if (d && d.ok && d.prefs) {
+          Object.keys(d.prefs).forEach(function (key) {
+            var serverPrefs = d.prefs[key] || {};
+            var clientPrefs = prefsCache[key] || {};
+            if (Number(clientPrefs._savedAt || 0) > Number(serverPrefs._savedAt || 0)) return;
+            if ((!serverPrefs.widths || !Object.keys(serverPrefs.widths).length) &&
+                clientPrefs.widths && Object.keys(clientPrefs.widths).length) {
+              serverPrefs.widths = Object.assign({}, clientPrefs.widths);
+            }
+            prefsCache[key] = serverPrefs;
+          });
+          try { localStorage.setItem(CLIENT_PREFS_KEY, JSON.stringify(prefsCache)); } catch (e) {}
+        }
+      })
       .catch(function () {})
       .then(function () {
         prefsLoaded = true;
