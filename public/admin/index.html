@@ -2585,11 +2585,17 @@
   <!-- 🎁 경품관리 (Prizes) 등록/관리 -->
   <div class="tab-panel" id="tab-prizes">
     <div class="panel-card">
-      <div class="fg" style="max-width:520px;">
-        <label>프로젝트 선택 <span class="req">*</span></label>
-        <select id="prize-project" onchange="onPrizeProjectChange()">
-          <option value="">- 프로젝트를 선택하세요 -</option>
-        </select>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+        <div class="fg" style="width:100%;max-width:520px;margin-bottom:0;">
+          <label>프로젝트 선택 <span class="req">*</span></label>
+          <select id="prize-project" onchange="onPrizeProjectChange()">
+            <option value="">- 프로젝트를 선택하세요 -</option>
+          </select>
+        </div>
+        <button id="btn-prize-reload" class="btn btn-o" type="button" onclick="reloadPrizeManagement()" disabled
+          style="min-width:150px;height:38px;padding:8px 18px;border:1.5px solid #2563eb;color:#1d4ed8;background:#fff;font-size:13px;font-weight:800;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+          ↻ Reload
+        </button>
       </div>
       <div id="prize-body" style="display:none;">
         <!-- 🎰 경품 무작위 배치 및 통계 관리 -->
@@ -13951,11 +13957,35 @@ async function loadPrizesTab() {
 function onPrizeProjectChange() {
   const body = document.getElementById('prize-body');
   const pid = document.getElementById('prize-project').value;
+  const reloadBtn = document.getElementById('btn-prize-reload');
+  if (reloadBtn) reloadBtn.disabled = !pid;
   if (!pid) { body.style.display = 'none'; return; }
   body.style.display = '';
   
   resetPrizeForm();
   loadPrizeList();
+}
+
+async function reloadPrizeManagement() {
+  const pid = document.getElementById('prize-project').value;
+  const btn = document.getElementById('btn-prize-reload');
+  if (!pid || !btn || btn.disabled) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '↻ Reloading...';
+  try {
+    const refreshed = await loadPrizeList();
+    btn.innerHTML = refreshed ? '✓ Reload 완료' : '⚠ Reload 실패';
+    setTimeout(() => {
+      if (document.getElementById('prize-project').value) {
+        btn.innerHTML = '↻ Reload';
+        btn.disabled = false;
+      }
+    }, 900);
+  } catch (e) {
+    btn.innerHTML = '↻ Reload';
+    btn.disabled = false;
+  }
 }
 
 function resetPrizeForm() {
@@ -14218,6 +14248,7 @@ async function loadPrizeList() {
   try {
     const r = await fetch(`/api/host/projects/${pid}/prize-stats`, { cache: 'no-store' });
     const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.message || '경품 정보 조회 실패');
     
     // Update live stats card
     document.getElementById('prize-stat-visitors').innerText = `${(d.total_visitors || 0).toLocaleString('ko-KR')}명`;
@@ -14252,7 +14283,7 @@ async function loadPrizeList() {
     
     if (list.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="color:#94a3b8;padding:24px;text-align:center;">등록된 경품이 없습니다.</td></tr>';
-      return;
+      return true;
     }
     
     tbody.innerHTML = list.map((item, idx) => {
@@ -14288,10 +14319,12 @@ async function loadPrizeList() {
         </tr>
       `;
     }).join('');
+    return true;
     
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="9" style="color:#dc2626;padding:24px;text-align:center;">경품 목록 조회 실패</td></tr>';
     console.error(e);
+    return false;
   }
 }
 
