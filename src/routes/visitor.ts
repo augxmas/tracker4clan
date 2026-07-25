@@ -121,6 +121,24 @@ router.post("/identify", async (req, res) => {
   res.json({ ok: true });
 });
 
+router.post("/logout", async (req, res) => {
+  const projectSerial = String(req.body?.project_serial || "").trim();
+  if (!projectSerial) {
+    res.status(400).json({ ok: false, error: "project_serial_required" });
+    return;
+  }
+
+  const [projectRows] = await pool.execute("SELECT id FROM projects WHERE project_serial = ?", [projectSerial]);
+  if (!Array.isArray(projectRows) || projectRows.length === 0) {
+    res.status(404).json({ ok: false, error: "project_not_found" });
+    return;
+  }
+
+  const projectId = Number((projectRows as any)[0].id);
+  res.clearCookie(`tracker_phone_${projectId}`, { httpOnly: true, sameSite: "lax" });
+  res.json({ ok: true });
+});
+
 router.post("/visit", async (req, res) => {
   const { project_serial, location_seq } = req.body as Record<string, string>;
 

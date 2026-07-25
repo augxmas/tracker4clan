@@ -742,6 +742,14 @@
       if (saved) {
         saveVisitor({ ...saved, loggedOut: true });
       }
+      try {
+        await fetch('/api/visitor/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_serial: projectSerial }),
+        });
+      } catch (e) {}
+      try { localStorage.removeItem(`tracker_phone_${projectSerial}`); } catch (e) {}
       currentVisitor = null;
       updateTopRight();
       closeVisitorSettings();
@@ -759,10 +767,12 @@
         const m = String(currentVisitor.profile.fields.mobile || '').replace(/[^0-9]/g, '');
         if (m) candidates.push(m);
       }
-      try {
-        const stored = (lsGet && lsGet(KP)) ? String(lsGet(KP)).replace(/[^0-9]/g, '') : '';
-        if (stored && !candidates.includes(stored)) candidates.push(stored);
-      } catch (e) {}
+      if (!currentVisitor) {
+        try {
+          const stored = (lsGet && lsGet(KP)) ? String(lsGet(KP)).replace(/[^0-9]/g, '') : '';
+          if (stored && !candidates.includes(stored)) candidates.push(stored);
+        } catch (e) {}
+      }
       const validPhones = candidates.filter(p => /^01[016789]\d{7,8}$/.test(p));
       if (validPhones.length === 0) return false;
 
@@ -895,6 +905,20 @@
       const { ok, d } = await api('/api/visitor/identify',
         { project_serial: projectSerial, phone, consented: hasConsent() });
       return { ok, error: d.error };
+    }
+
+    function getCurrentVisitorPhone() {
+      const fields = currentVisitor && currentVisitor.profile && currentVisitor.profile.fields || {};
+      return normPhone(fields.mobile || fields.휴대폰 || fields.phone || fields.연락처 || '');
+    }
+
+    async function activateCurrentVisitorIdentity() {
+      const phone = getCurrentVisitorPhone();
+      if (!validPhone(phone)) return false;
+      lsSet(KC, '1');
+      lsSet(KP, phone);
+      const result = await identify(phone);
+      return !!result.ok;
     }
 
     // ── 동의 화면 ──
@@ -1230,6 +1254,7 @@
       loadAndRenderVisitorPrize();
     }
     async function loadProgress(justVisited) {
+      if (currentVisitor) await activateCurrentVisitorIdentity();
       let { ok, d } = await api(`/api/visitor/progress/${projectSerial}`);
       if (!ok) {
         if (d.error === 'phone_required' || d.error === 'visitor_not_found') {
@@ -1854,7 +1879,10 @@
       } catch (e) {}
 
       // 자동 로그인 (localStorage 저장 이메일) — 우상단에 이름·⚙ 표시
-      try { await autoLoginVisitor(); } catch (e) {}
+      try {
+        const autoLoggedIn = await autoLoginVisitor();
+        if (autoLoggedIn) await activateCurrentVisitorIdentity();
+      } catch (e) {}
 
       // 사전등록/현장등록 token 자동 식별 우선 시도
       if (await tryReservationLogin()) { proceedAfterIdentify(); return; }
@@ -2350,6 +2378,7 @@
         verified: true,
         loggedOut: false
       });
+      await activateCurrentVisitorIdentity();
       
       closeVisitorRegister();
       updateTopRight();
@@ -2495,6 +2524,7 @@
           clearSavedVisitor();
         }
         currentVisitor = { email, name, profile: { mode: 'identity', status: 'active', fields: { name, email, mobile } } };
+        await activateCurrentVisitorIdentity();
         closeVisitorRegister();
         updateTopRight();
         // 메뉴 재렌더 (잠금 해제)
