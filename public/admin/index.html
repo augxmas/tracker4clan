@@ -13704,6 +13704,37 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+const RESOURCE_ARCHIVE_EXTENSIONS = new Set([
+  'zip', 'rar', '7z', 'tar', 'gz', 'gzip', 'bz2', 'xz', 'tgz', 'cab', 'iso', 'jar', 'war'
+]);
+const RESOURCE_TEXT_EXTENSIONS = new Set([
+  'txt', 'text', 'csv', 'tsv', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'css', 'scss',
+  'sass', 'less', 'html', 'htm', 'xml', 'json', 'yaml', 'yml', 'md', 'log', 'ini',
+  'conf', 'config', 'sql', 'sh', 'bat', 'cmd', 'ps1', 'py', 'java', 'c', 'cpp', 'h',
+  'hpp', 'go', 'rs', 'php', 'rb', 'pl', 'vue', 'svelte', 'svg'
+]);
+const RESOURCE_BINARY_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'ico',
+  'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma',
+  'mp4', 'webm', 'mov', 'avi', 'mkv', 'mpeg', 'mpg', 'wmv',
+  'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'hwp', 'hwpx', 'bin'
+]);
+
+function validateResourceUploadFile(file) {
+  const fileName = String(file && file.name || '');
+  const dotIndex = fileName.lastIndexOf('.');
+  if (dotIndex <= 0 || dotIndex === fileName.length - 1) {
+    return '확장자가 없는 파일은 업로드할 수 없습니다.';
+  }
+  const ext = fileName.slice(dotIndex + 1).toLowerCase();
+  if (RESOURCE_ARCHIVE_EXTENSIONS.has(ext)) return 'zip 파일은 업로드할 수 없습니다.';
+  if (RESOURCE_TEXT_EXTENSIONS.has(ext) || String(file.type || '').toLowerCase().startsWith('text/')) {
+    return 'txt 계열은 업로드할 수 없습니다.';
+  }
+  if (!RESOURCE_BINARY_EXTENSIONS.has(ext)) return '바이너리 형식의 파일만 업로드할 수 있습니다.';
+  return '';
+}
+
 async function uploadResource() {
   const pid = document.getElementById('res-project').value;
   if (!pid) return;
@@ -13712,6 +13743,13 @@ async function uploadResource() {
   const fileInp = document.getElementById('res-file');
   const file = fileInp.files[0];
   const msg = document.getElementById('res-msg');
+
+  const fileValidationMessage = file ? validateResourceUploadFile(file) : '';
+  if (fileValidationMessage) {
+    msg.style.color = '#dc2626';
+    msg.textContent = fileValidationMessage;
+    return;
+  }
   
   msg.style.color = '#dc2626';
   if (!title) { msg.textContent = '자료 제목을 입력해 주세요.'; return; }
@@ -13947,6 +13985,13 @@ async function saveResourceEdit() {
   const fileInp = document.getElementById('edit-res-file');
   const file = fileInp.files[0];
   const msg = document.getElementById('edit-res-msg');
+
+  const fileValidationMessage = file ? validateResourceUploadFile(file) : '';
+  if (fileValidationMessage) {
+    msg.style.color = '#dc2626';
+    msg.textContent = fileValidationMessage;
+    return;
+  }
   
   msg.style.color = '#dc2626';
   if (!title) { msg.textContent = '자료 제목을 입력해 주세요.'; return; }

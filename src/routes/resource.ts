@@ -14,6 +14,34 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
 });
 
+const RESOURCE_ARCHIVE_EXTENSIONS = new Set([
+  ".zip", ".rar", ".7z", ".tar", ".gz", ".gzip", ".bz2", ".xz", ".tgz", ".cab", ".iso", ".jar", ".war",
+]);
+const RESOURCE_TEXT_EXTENSIONS = new Set([
+  ".txt", ".text", ".csv", ".tsv", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx",
+  ".css", ".scss", ".sass", ".less", ".html", ".htm", ".xml", ".json", ".yaml", ".yml",
+  ".md", ".log", ".ini", ".conf", ".config", ".sql", ".sh", ".bat", ".cmd", ".ps1",
+  ".py", ".java", ".c", ".cpp", ".h", ".hpp", ".go", ".rs", ".php", ".rb", ".pl",
+  ".vue", ".svelte", ".svg",
+]);
+const RESOURCE_BINARY_EXTENSIONS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tif", ".tiff", ".ico",
+  ".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".wma",
+  ".mp4", ".webm", ".mov", ".avi", ".mkv", ".mpeg", ".mpg", ".wmv",
+  ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".hwp", ".hwpx", ".bin",
+]);
+
+function validateResourceFile(file: Express.Multer.File): string | null {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!ext) return "확장자가 없는 파일은 업로드할 수 없습니다.";
+  if (RESOURCE_ARCHIVE_EXTENSIONS.has(ext)) return "zip 파일은 업로드할 수 없습니다.";
+  if (RESOURCE_TEXT_EXTENSIONS.has(ext) || file.mimetype.toLowerCase().startsWith("text/")) {
+    return "txt 계열은 업로드할 수 없습니다.";
+  }
+  if (!RESOURCE_BINARY_EXTENSIONS.has(ext)) return "바이너리 형식의 파일만 업로드할 수 있습니다.";
+  return null;
+}
+
 async function ensureOwnership(projectId: number, hostId: number): Promise<boolean> {
   const [rows] = await pool.execute("SELECT id FROM projects WHERE id = ? AND host_id = ?", [projectId, hostId]);
   return Array.isArray(rows) && rows.length > 0;
@@ -78,6 +106,12 @@ router.post("/host/projects/:id/resources", requireHost, upload.single("file"), 
       return;
     }
 
+    const fileValidationMessage = validateResourceFile(file);
+    if (fileValidationMessage) {
+      res.status(400).json({ ok: false, error: "invalid_file_type", message: fileValidationMessage });
+      return;
+    }
+
     const title = String(req.body.title || "").trim();
     const description = String(req.body.description || "").trim();
 
@@ -87,7 +121,7 @@ router.post("/host/projects/:id/resources", requireHost, upload.single("file"), 
     }
 
     const safe = crypto.randomBytes(8).toString("hex");
-    const ext = path.extname(file.originalname).toLowerCase().slice(0, 10) || ".png";
+    const ext = path.extname(file.originalname).toLowerCase().slice(0, 10);
     const uniqueFileName = `${Date.now()}_${safe}${ext}`;
     const fileUrl = `/uploads/resources/${uniqueFileName}`;
 
@@ -167,8 +201,13 @@ router.put("/host/resources/:id", requireHost, upload.single("file"), async (req
 
     const file = req.file;
     if (file) {
+      const fileValidationMessage = validateResourceFile(file);
+      if (fileValidationMessage) {
+        res.status(400).json({ ok: false, error: "invalid_file_type", message: fileValidationMessage });
+        return;
+      }
       const safe = crypto.randomBytes(8).toString("hex");
-      const ext = path.extname(file.originalname).toLowerCase().slice(0, 10) || ".png";
+      const ext = path.extname(file.originalname).toLowerCase().slice(0, 10);
       const uniqueFileName = `${Date.now()}_${safe}${ext}`;
       const fileUrl = `/uploads/resources/${uniqueFileName}`;
 
