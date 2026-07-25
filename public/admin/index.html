@@ -2661,7 +2661,17 @@
               <div style="height:16px;background:#dbeafe;border-radius:999px;overflow:hidden;">
                 <div id="prize-winning-overall-bar" style="height:100%;width:0;background:linear-gradient(90deg,#2563eb,#7c3aed);border-radius:999px;transition:width .45s ease;"></div>
               </div>
-              <div style="margin-top:8px;font-size:11px;color:#64748b;">전체 경품 수량 중 당첨 완료된 수량입니다.</div>
+              <div style="margin-top:14px;padding-top:12px;border-top:1px solid #bfdbfe;">
+                <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;">
+                  <span style="font-size:12px;font-weight:800;color:#166534;">수령</span>
+                  <strong id="prize-received-overall-count" style="font-size:19px;color:#15803d;">0 / 0개</strong>
+                  <span id="prize-received-overall-rate" style="font-size:12px;font-weight:800;color:#047857;">0%</span>
+                </div>
+                <div style="height:12px;background:#d1fae5;border-radius:999px;overflow:hidden;">
+                  <div id="prize-received-overall-bar" style="height:100%;width:0;background:linear-gradient(90deg,#22c55e,#059669);border-radius:999px;transition:width .45s ease;"></div>
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:#64748b;">파란색은 당첨, 초록색은 QR 확인 후 수령 완료 현황입니다.</div>
             </div>
             <div id="prize-winning-rank-bars" style="display:flex;flex-direction:column;gap:11px;justify-content:center;">
               <div style="padding:24px;text-align:center;color:#94a3b8;font-size:12px;">등록된 경품이 없습니다.</div>
@@ -2747,12 +2757,14 @@
                   <th style="width:130px;">휴대폰 번호</th>
                   <th style="width:180px;">이메일</th>
                   <th style="width:90px;">도전 순서</th>
+                  <th style="width:100px;">수령 상태</th>
                   <th style="width:150px;">당첨 일시</th>
+                  <th style="width:150px;">수령 일시</th>
                 </tr>
               </thead>
               <tbody id="prize-winner-grid-tbody">
                 <tr>
-                  <td colspan="8" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td>
+                  <td colspan="10" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td>
                 </tr>
               </tbody>
             </table>
@@ -14294,7 +14306,9 @@ function renderPrizeWinningStatus(prizes) {
   const list = Array.isArray(prizes) ? prizes : [];
   const totalCount = list.reduce((sum, prize) => sum + Math.max(0, Number(prize.winner_count || 0)), 0);
   const claimedCount = list.reduce((sum, prize) => sum + Math.max(0, Number(prize.claimed_count || 0)), 0);
+  const receivedCount = list.reduce((sum, prize) => sum + Math.max(0, Number(prize.received_count || 0)), 0);
   const overallRate = totalCount > 0 ? (claimedCount / totalCount) * 100 : 0;
+  const receivedRate = totalCount > 0 ? (receivedCount / totalCount) * 100 : 0;
   const formatRate = rate => Number.isInteger(rate)
     ? rate.toLocaleString('ko-KR')
     : rate.toLocaleString('ko-KR', { minimumFractionDigits:1, maximumFractionDigits:1 });
@@ -14304,16 +14318,22 @@ function renderPrizeWinningStatus(prizes) {
   document.getElementById('prize-winning-overall-rate').textContent = `${formatRate(overallRate)}%`;
   document.getElementById('prize-winning-overall-bar').style.width =
     `${Math.min(100, Math.max(0, overallRate))}%`;
+  document.getElementById('prize-received-overall-count').textContent =
+    `${receivedCount.toLocaleString('ko-KR')} / ${totalCount.toLocaleString('ko-KR')}개`;
+  document.getElementById('prize-received-overall-rate').textContent = `${formatRate(receivedRate)}%`;
+  document.getElementById('prize-received-overall-bar').style.width =
+    `${Math.min(100, Math.max(0, receivedRate))}%`;
 
   const rankMap = new Map();
   list.forEach(prize => {
     const ranking = Number(prize.ranking || 1);
     const rankName = String(prize.rank_name || `${ranking}등`);
     const key = String(ranking);
-    if (!rankMap.has(key)) rankMap.set(key, { ranking, rankName, total:0, claimed:0 });
+    if (!rankMap.has(key)) rankMap.set(key, { ranking, rankName, total:0, claimed:0, received:0 });
     const rank = rankMap.get(key);
     rank.total += Math.max(0, Number(prize.winner_count || 0));
     rank.claimed += Math.max(0, Number(prize.claimed_count || 0));
+    rank.received += Math.max(0, Number(prize.received_count || 0));
   });
 
   const ranks = Array.from(rankMap.values()).sort((a, b) =>
@@ -14325,27 +14345,30 @@ function renderPrizeWinningStatus(prizes) {
     return;
   }
 
-  bars.innerHTML = ranks.map((rank, index) => {
+  bars.innerHTML = ranks.map(rank => {
     const rate = rank.total > 0 ? (rank.claimed / rank.total) * 100 : 0;
+    const receiptRate = rank.total > 0 ? (rank.received / rank.total) * 100 : 0;
     const barRate = Math.min(100, Math.max(0, rate));
-    const colors = [
-      ['#f59e0b','#f97316'],
-      ['#3b82f6','#6366f1'],
-      ['#10b981','#059669'],
-      ['#8b5cf6','#a855f7'],
-      ['#ec4899','#f43f5e']
-    ][index % 5];
+    const receiptBarRate = Math.min(100, Math.max(0, receiptRate));
     return `
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:5px;font-size:12px;">
+      <div style="padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:7px;font-size:12px;">
           <span style="font-weight:800;color:#334155;">${esc(rank.rankName)}</span>
-          <span style="color:#64748b;white-space:nowrap;">
-            <b style="color:#1e293b;">${rank.claimed.toLocaleString('ko-KR')} / ${rank.total.toLocaleString('ko-KR')}개</b>
-            · ${formatRate(rate)}%
-          </span>
+          <span style="color:#64748b;white-space:nowrap;">총 ${rank.total.toLocaleString('ko-KR')}개</span>
         </div>
-        <div style="height:13px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
-          <div style="height:100%;width:${barRate}%;background:linear-gradient(90deg,${colors[0]},${colors[1]});border-radius:999px;transition:width .45s ease;"></div>
+        <div style="display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:7px;margin-bottom:5px;font-size:11px;">
+          <span style="font-weight:800;color:#4338ca;">당첨</span>
+          <div style="height:10px;background:#e0e7ff;border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${barRate}%;background:linear-gradient(90deg,#3b82f6,#7c3aed);border-radius:999px;transition:width .45s ease;"></div>
+          </div>
+          <span style="min-width:82px;text-align:right;color:#475569;">${rank.claimed.toLocaleString('ko-KR')}개 · ${formatRate(rate)}%</span>
+        </div>
+        <div style="display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:7px;font-size:11px;">
+          <span style="font-weight:800;color:#15803d;">수령</span>
+          <div style="height:10px;background:#d1fae5;border-radius:999px;overflow:hidden;">
+            <div style="height:100%;width:${receiptBarRate}%;background:linear-gradient(90deg,#22c55e,#059669);border-radius:999px;transition:width .45s ease;"></div>
+          </div>
+          <span style="min-width:82px;text-align:right;color:#475569;">${rank.received.toLocaleString('ko-KR')}개 · ${formatRate(receiptRate)}%</span>
         </div>
       </div>`;
   }).join('');
@@ -14354,7 +14377,7 @@ function renderPrizeWinningStatus(prizes) {
 async function loadPrizeWinnerGrid(projectId) {
   const tbody = document.getElementById('prize-winner-grid-tbody');
   const count = document.getElementById('prize-winner-grid-count');
-  tbody.innerHTML = '<tr><td colspan="8" style="color:#64748b;padding:24px;text-align:center;">조회 중입니다...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="10" style="color:#64748b;padding:24px;text-align:center;">조회 중입니다...</td></tr>';
   count.textContent = '조회 중...';
 
   try {
@@ -14365,7 +14388,7 @@ async function loadPrizeWinnerGrid(projectId) {
     const winners = Array.isArray(data.winners) ? data.winners : [];
     count.textContent = `총 ${winners.length.toLocaleString('ko-KR')}명`;
     if (!winners.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="color:#94a3b8;padding:24px;text-align:center;">당첨자가 없습니다.</td></tr>';
       return true;
     }
 
@@ -14373,6 +14396,12 @@ async function loadPrizeWinnerGrid(projectId) {
       const challengedAt = winner.challenged_at
         ? new Date(winner.challenged_at).toLocaleString('ko-KR')
         : '-';
+      const receivedAt = winner.received_at
+        ? new Date(winner.received_at).toLocaleString('ko-KR')
+        : '-';
+      const receiptBadge = winner.received
+        ? '<span style="display:inline-block;padding:4px 8px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:800;">수령 완료</span>'
+        : '<span style="display:inline-block;padding:4px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:800;">당첨 · 미수령</span>';
       return `
         <tr>
           <td>${index + 1}</td>
@@ -14382,14 +14411,16 @@ async function loadPrizeWinnerGrid(projectId) {
           <td>${esc(winner.phone || '-')}</td>
           <td style="color:#64748b;">${esc(winner.email || '-')}</td>
           <td style="font-weight:700;color:#2563eb;">${Number(winner.slot_index).toLocaleString('ko-KR')}번째</td>
+          <td>${receiptBadge}</td>
           <td style="font-size:12px;color:#64748b;">${challengedAt}</td>
+          <td style="font-size:12px;color:${winner.received ? '#166534' : '#94a3b8'};">${receivedAt}</td>
         </tr>`;
     }).join('');
     return true;
   } catch (error) {
     console.error(error);
     count.textContent = '조회 실패';
-    tbody.innerHTML = '<tr><td colspan="8" style="color:#dc2626;padding:24px;text-align:center;">당첨자 현황을 불러오지 못했습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="color:#dc2626;padding:24px;text-align:center;">당첨자 현황을 불러오지 못했습니다.</td></tr>';
     return false;
   }
 }

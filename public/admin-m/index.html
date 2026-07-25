@@ -139,14 +139,14 @@
         </div>
         <div id="rw-scan-wrap" style="display:none;">
           <div class="scan-wrap"><video id="rw-video" playsinline></video><div class="scan-frame"></div></div>
-          <div class="scan-msg" id="rw-msg">QR 을 사각형 안에 비춰주세요.</div>
+          <div class="scan-msg" id="rw-msg">당첨자의 QR 을 사각형 안에 비춰주세요.</div>
         </div>
         <div id="rw-actions" style="display:flex;gap:8px;margin-bottom:8px;">
           <button class="btn btn-p" style="flex:1;opacity:.45;" id="rw-start" disabled onclick="rwStart()">📷 카메라 스캔</button>
           <button class="btn btn-o" style="flex:1;display:none;" id="rw-stop" onclick="rwStop()">⏹ 종료</button>
         </div>
         <div class="fld">
-          <label>또는 토큰 직접 입력</label>
+          <label>또는 방문자 QR URL·토큰 직접 입력</label>
           <div style="display:flex;gap:6px;">
             <input id="rw-token" type="text" placeholder="QR 토큰 또는 URL" disabled>
             <button class="btn btn-o" id="rw-lookup-btn" disabled style="opacity:.45;" onclick="rwLookupInput()">조회</button>
@@ -617,7 +617,7 @@ async function rwStart() {
   document.getElementById('rw-scan-wrap').style.display = '';
   document.getElementById('rw-stop').style.display = '';
   rwScanning = true; rwBusy = false;
-  rwSetMsg('경품 QR 을 사각형 안에 비춰주세요.','#475569');
+  rwSetMsg('당첨자의 QR 을 사각형 안에 비춰주세요.','#475569');
   rwRAF = requestAnimationFrame(rwTick);
 }
 function rwStop() {
@@ -641,8 +641,8 @@ function rwTick() {
         rwBusy = true;
         const token = rwExtractToken(code.data);
         if (token) { rwSetMsg('✓ 인식 — 조회 중...','#166534'); rwLookup(token); return; }
-        rwSetMsg('⚠ 경품 QR 이 아닙니다.','#b45309');
-        setTimeout(() => { rwBusy = false; rwSetMsg('경품 QR 을 사각형 안에 비춰주세요.','#475569'); }, 1500);
+        rwSetMsg('⚠ 지원되는 방문자·경품 QR 이 아닙니다.','#b45309');
+        setTimeout(() => { rwBusy = false; rwSetMsg('당첨자의 QR 을 사각형 안에 비춰주세요.','#475569'); }, 1500);
       }
     } catch (e) {}
   }
@@ -650,6 +650,10 @@ function rwTick() {
 }
 function rwExtractToken(s) {
   if (!s) return null;
+  const instant = String(s).match(/\/r\/[^\/]+\/([a-zA-Z0-9]{16,64})\b/);
+  if (instant) return instant[1];
+  const mission = String(s).match(/^([^|]{3,64}\|[0-9]{10,11})$/);
+  if (mission) return mission[1];
   const m = String(s).match(/\/public\/reward\/([a-zA-Z0-9]{16,64})\b/);
   if (m) return m[1];
   const m2 = String(s).match(/^([a-zA-Z0-9]{16,64})$/);
@@ -663,6 +667,14 @@ function rwLookupInput() {
 }
 async function rwLookup(token) {
   try {
+    const instantResponse = await fetch(`/api/host/projects/${currentProjectId}/prize-receipt/lookup/${encodeURIComponent(token)}`, { cache:'no-store' });
+    const instantData = await instantResponse.json();
+    if (instantResponse.ok && instantData.ok) {
+      rwRenderInstantPrize(token, instantData);
+      rwStop();
+      return;
+    }
+
     const r = await fetch(`/api/survey/host/reward/lookup/${encodeURIComponent(token)}`);
     const d = await r.json();
     if (!r.ok || !d.ok) {
@@ -678,6 +690,53 @@ async function rwLookup(token) {
     }
     rwRender(token, d); rwStop();
   } catch (e) { rwBusy = false; }
+}
+function rwRenderInstantPrize(identifier, d) {
+  const prize = d.prize || {};
+  const winner = d.winner || {};
+  const received = d.already_received;
+  const html = `
+    <div class="card" style="border-left:4px solid ${received?'#dc2626':'#15803d'};">
+      <div style="text-align:center;padding:10px;background:${received?'#fee2e2':'#dcfce7'};border-radius:10px;margin-bottom:10px;">
+        <div style="font-size:15px;font-weight:800;color:${received?'#991b1b':'#166534'};">${received?'⚠ 이미 수령 완료':'✓ 즉석 경품 수령 가능'}</div>
+        ${received ? `<div style="font-size:11px;color:#7f1d1d;margin-top:3px;">${esc(fmtDt(d.received_at))}</div>` : ''}
+      </div>
+      <div style="font-size:11px;color:#64748b;font-weight:700;">📁 프로젝트</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${esc(d.project_name||'')}<br><span style="font-size:11px;font-weight:500;color:#94a3b8;font-family:monospace;">${esc(d.project_serial||'')}</span></div>
+      <div style="font-size:11px;color:#64748b;font-weight:700;">👤 당첨자</div>
+      <div style="font-size:14px;font-weight:700;">${esc(winner.name||'(이름 없음)')}</div>
+      ${winner.email?`<div style="font-size:12px;color:#475569;">📧 ${esc(winner.email)}</div>`:''}
+      ${winner.phone?`<div style="font-size:12px;color:#475569;">📱 ${esc(fmtPhone(winner.phone))}</div>`:''}
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">당첨: ${esc(fmtDt(winner.challenged_at))} · ${Number(winner.slot_index||0)}번째 도전</div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px;margin-bottom:10px;">
+        <div style="font-size:11px;color:#9a3412;font-weight:700;">🎁 ${esc(prize.rank_name||'당첨 경품')}</div>
+        ${prize.image_path?`<img src="${esc(prize.image_path)}" style="width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin:6px 0;background:#fff;">`:''}
+        <div style="font-size:15px;font-weight:800;">${esc(prize.prize_name||'(경품명 없음)')}</div>
+      </div>
+      ${received
+        ? `<button class="btn btn-o btn-full" disabled style="opacity:.5;">✓ 이미 수령 완료</button>`
+        : `<button class="btn btn-g btn-full" onclick="rwRedeemInstantPrize('${esc(identifier)}')">✓ 경품 수령 완료 처리</button>`}
+      <button class="btn btn-o btn-full" style="margin-top:6px;" onclick="rwReset()">↻ 다음 QR</button>
+    </div>`;
+  document.getElementById('rw-result').innerHTML = html;
+}
+async function rwRedeemInstantPrize(identifier) {
+  try {
+    const r = await fetch(`/api/host/projects/${currentProjectId}/prize-receipt/redeem`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ identifier })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      alert(d.message || '경품 수령 처리에 실패했습니다.');
+      if (d.error === 'already_received') rwLookup(identifier);
+      return;
+    }
+    rwLookup(identifier);
+  } catch (e) {
+    alert('네트워크 오류로 경품 수령을 처리하지 못했습니다.');
+  }
 }
 function rwRender(token, d) {
   const rw = d.reward || {}; const re = d.respondent || {};

@@ -84,12 +84,25 @@ const upload = multer({ storage });
         slot_index INT NOT NULL,
         prize_id BIGINT NULL,
         challenged_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        received_at DATETIME NULL,
+        received_by_host_id BIGINT NULL,
         UNIQUE KEY uq_proj_visitor (project_id, visitor_id),
         CONSTRAINT fk_challenge_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
         CONSTRAINT fk_challenge_visitor FOREIGN KEY (visitor_id) REFERENCES visitors(id) ON DELETE CASCADE,
         CONSTRAINT fk_challenge_prize FOREIGN KEY (prize_id) REFERENCES project_prizes(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
+
+    try {
+      await pool.query("ALTER TABLE visitor_prize_challenges ADD COLUMN received_at DATETIME NULL AFTER challenged_at");
+    } catch (e) {
+      // Column already exists
+    }
+    try {
+      await pool.query("ALTER TABLE visitor_prize_challenges ADD COLUMN received_by_host_id BIGINT NULL AFTER received_at");
+    } catch (e) {
+      // Column already exists
+    }
     
     console.log("project_prizes, slots, and challenges tables verified/created.");
   } catch (err) {
@@ -286,7 +299,8 @@ router.get("/host/projects/:projectId/prize-winners", requireHost, async (req, r
     }
 
     const [winnerRows] = await pool.execute(
-      `SELECT vpc.id, vpc.visitor_id, vpc.slot_index, vpc.challenged_at, v.phone,
+      `SELECT vpc.id, vpc.visitor_id, vpc.slot_index, vpc.challenged_at,
+              vpc.received_at, vpc.received_by_host_id, v.phone,
               pp.id AS prize_id, pp.ranking, pp.rank_name, pp.prize_name
          FROM visitor_prize_challenges vpc
          JOIN visitors v ON v.id = vpc.visitor_id
@@ -332,6 +346,8 @@ router.get("/host/projects/:projectId/prize-winners", requireHost, async (req, r
           email: emailMap.get(phoneKey) || "",
           slot_index: Number(winner.slot_index),
           challenged_at: winner.challenged_at,
+          received_at: winner.received_at,
+          received: !!winner.received_at,
         };
       }),
     });
@@ -433,6 +449,176 @@ function toUploadUrl(p?: string | null): string | null {
   return rel >= 0 ? `/${norm.slice(rel)}` : norm;
 }
 
+async function resolveInstantPrizeReceipt(executor: any, projectId: number, identifier: string, lock = false) {
+  let phone = "";
+  let name = "";
+  let email = "";
+
+  if (identifier.includes("|")) {
+    const [serial, rawPhone] = identifier.split("|", 2);
+    const [projectRows] = await executor.execute(
+      "SELECT project_serial FROM projects WHERE id = ? LIMIT 1",
+      [projectId],
+    );
+    const project = Array.isArray(projectRows) ? projectRows[0] as any : null;
+    if (!project || String(project.project_serial) !== String(serial)) return null;
+    phone = String(rawPhone || "").replace(/\D/g, "");
+  } else {
+    const [reservationRows] = await executor.execute(
+      "SELECT email_lower, fields_json FROM reservations WHERE project_id = ? AND token = ? LIMIT 1",
+      [projectId, identifier],
+    );
+    const reservation = Array.isArray(reservationRows) ? reservationRows[0] as any : null;
+    if (!reservation) return null;
+    try {
+      const fields = JSON.parse(reservation.fields_json || "{}");
+      phone = String(fields.mobile || fields.phone || "").replace(/\D/g, "");
+      name = String(fields.name || "");
+      email = String(reservation.email_lower || fields.email || "");
+    } catch {}
+  }
+  if (!phone) return null;
+
+  const [visitorRows] = await executor.execute(
+    "SELECT id, phone FROM visitors WHERE project_id = ? AND REPLACE(REPLACE(REPLACE(phone, '-', ''), ' ', ''), '.', '') = ? LIMIT 1",
+    [projectId, phone],
+  );
+  const visitor = Array.isArray(visitorRows) ? visitorRows[0] as any : null;
+  if (!visitor) return null;
+
+  if (!name || !email) {
+    const [reservationRows] = await executor.execute(
+      "SELECT email_lower, fields_json FROM reservations WHERE project_id = ?",
+      [projectId],
+    );
+    for (const row of Array.isArray(reservationRows) ? reservationRows as any[] : []) {
+      try {
+        const fields = JSON.parse(row.fields_json || "{}");
+        const reservationPhone = String(fields.mobile || fields.phone || "").replace(/\D/g, "");
+        if (reservationPhone !== phone) continue;
+        name = String(fields.name || name || "");
+        email = String(row.email_lower || fields.email || email || "");
+        break;
+      } catch {}
+    }
+  }
+
+  const [challengeRows] = await executor.execute(
+    `SELECT vpc.id, vpc.slot_index, vpc.challenged_at, vpc.received_at,
+            pp.id AS prize_id, pp.ranking, pp.rank_name, pp.prize_name, pp.image_path
+       FROM visitor_prize_challenges vpc
+       JOIN project_prizes pp ON pp.id = vpc.prize_id
+      WHERE vpc.project_id = ? AND vpc.visitor_id = ? AND vpc.prize_id IS NOT NULL
+      LIMIT 1${lock ? " FOR UPDATE" : ""}`,
+    [projectId, visitor.id],
+  );
+  const challenge = Array.isArray(challengeRows) ? challengeRows[0] as any : null;
+  if (!challenge) return null;
+
+  return {
+    challengeId: Number(challenge.id),
+    visitorId: Number(visitor.id),
+    phone: visitor.phone || phone,
+    name: name || "미지정",
+    email,
+    slotIndex: Number(challenge.slot_index),
+    challengedAt: challenge.challenged_at,
+    receivedAt: challenge.received_at,
+    prize: {
+      id: Number(challenge.prize_id),
+      ranking: Number(challenge.ranking || 1),
+      rank_name: challenge.rank_name,
+      prize_name: challenge.prize_name,
+      image_path: toUploadUrl(challenge.image_path),
+    },
+  };
+}
+
+router.get("/host/projects/:projectId/prize-receipt/lookup/:identifier", requireHost, async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+    const hostId = req.session.host!.id;
+    const identifier = String(req.params.identifier || "").trim();
+    const [projectRows] = await pool.execute(
+      "SELECT id, project_name, project_serial FROM projects WHERE id = ? AND host_id = ?",
+      [projectId, hostId],
+    );
+    const project = Array.isArray(projectRows) ? projectRows[0] as any : null;
+    if (!project) {
+      res.status(404).json({ ok: false, error: "project_not_found", message: "프로젝트를 찾을 수 없거나 권한이 없습니다." });
+      return;
+    }
+    const receipt = await resolveInstantPrizeReceipt(pool, projectId, identifier);
+    if (!receipt) {
+      res.status(404).json({ ok: false, error: "prize_winner_not_found", message: "이 프로젝트의 즉석 경품 당첨 QR이 아닙니다." });
+      return;
+    }
+    res.json({
+      ok: true,
+      project_name: project.project_name,
+      project_serial: project.project_serial,
+      already_received: !!receipt.receivedAt,
+      received_at: receipt.receivedAt,
+      winner: {
+        name: receipt.name,
+        phone: receipt.phone,
+        email: receipt.email,
+        slot_index: receipt.slotIndex,
+        challenged_at: receipt.challengedAt,
+      },
+      prize: receipt.prize,
+    });
+  } catch (err: any) {
+    res.status(500).json({ ok: false, error: "db_error", message: err.message });
+  }
+});
+
+router.post("/host/projects/:projectId/prize-receipt/redeem", requireHost, async (req, res) => {
+  const projectId = Number(req.params.projectId);
+  const hostId = req.session.host!.id;
+  const identifier = String(req.body?.identifier || "").trim();
+  if (!identifier) {
+    res.status(400).json({ ok: false, error: "missing_identifier", message: "QR 정보가 필요합니다." });
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [projectRows] = await connection.execute(
+      "SELECT id FROM projects WHERE id = ? AND host_id = ? FOR UPDATE",
+      [projectId, hostId],
+    );
+    if (!Array.isArray(projectRows) || projectRows.length === 0) {
+      await connection.rollback();
+      res.status(404).json({ ok: false, error: "project_not_found", message: "프로젝트를 찾을 수 없거나 권한이 없습니다." });
+      return;
+    }
+    const receipt = await resolveInstantPrizeReceipt(connection, projectId, identifier, true);
+    if (!receipt) {
+      await connection.rollback();
+      res.status(404).json({ ok: false, error: "prize_winner_not_found", message: "즉석 경품 당첨자를 찾을 수 없습니다." });
+      return;
+    }
+    if (receipt.receivedAt) {
+      await connection.rollback();
+      res.status(409).json({ ok: false, error: "already_received", message: "이미 수령 완료된 경품입니다.", received_at: receipt.receivedAt });
+      return;
+    }
+    await connection.execute(
+      "UPDATE visitor_prize_challenges SET received_at = NOW(), received_by_host_id = ? WHERE id = ? AND received_at IS NULL",
+      [hostId, receipt.challengeId],
+    );
+    await connection.commit();
+    res.json({ ok: true, received_at: new Date().toISOString() });
+  } catch (err: any) {
+    await connection.rollback();
+    res.status(500).json({ ok: false, error: "db_error", message: err.message });
+  } finally {
+    connection.release();
+  }
+});
+
 // 5. Get prize project stats (현장등록인원, 경품도전가능인원, 경품도전인원 등)
 router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res) => {
   try {
@@ -504,7 +690,9 @@ router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res
     // 6) Prizes list with claimed counts
     const [prizesRows] = await pool.execute(
       `SELECT pp.id, pp.ranking, pp.rank_name, pp.prize_name, pp.winner_count, pp.image_path,
-              (SELECT COUNT(*) FROM visitor_prize_challenges vpc WHERE vpc.prize_id = pp.id) AS claimed_count
+              (SELECT COUNT(*) FROM visitor_prize_challenges vpc WHERE vpc.prize_id = pp.id) AS claimed_count,
+              (SELECT COUNT(*) FROM visitor_prize_challenges vpc
+                WHERE vpc.prize_id = pp.id AND vpc.received_at IS NOT NULL) AS received_count
          FROM project_prizes pp
         WHERE pp.project_id = ?
         ORDER BY pp.ranking ASC, pp.id ASC`,
@@ -517,6 +705,7 @@ router.get("/host/projects/:projectId/prize-stats", requireHost, async (req, res
       prize_name: p.prize_name,
       winner_count: Number(p.winner_count || 1),
       claimed_count: Number(p.claimed_count || 0),
+      received_count: Number(p.received_count || 0),
       image_path: toUploadUrl(p.image_path),
     }));
 
